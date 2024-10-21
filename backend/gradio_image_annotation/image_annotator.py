@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import warnings
 from pathlib import Path
-from typing import Any, List, Literal, cast
+from typing import Any, List, Optional, Literal, TypedDict, cast
 
 import numpy as np
 import PIL.Image
@@ -20,12 +20,20 @@ PIL.Image.init()  # fixes https://github.com/gradio-app/gradio/issues/2843
 class AnnotatedImageData(GradioModel):
     image: FileData
     boxes: List[dict] = []
+    orientation: int = 0
 
 
-def rgb2hex(r,g,b):
+class AnnotatedImageValue(TypedDict):
+    image: Optional[np.ndarray | PIL.Image.Image | str]
+    boxes: Optional[List[dict]]
+    orientation: Optional[int]
+
+
+def rgb2hex(r, g, b):
     def clip(x):
         return max(min(x, 255), 0)
-    return "#{:02x}{:02x}{:02x}".format(clip(r),clip(g),clip(b))
+
+    return "#{:02x}{:02x}{:02x}".format(clip(r), clip(g), clip(b))
 
 
 class image_annotator(Component):
@@ -125,7 +133,7 @@ class image_annotator(Component):
         self.height = height
         self.width = width
         self.image_mode = image_mode
-        
+
         self.sources = sources
         valid_sources = ["upload", "clipboard", "webcam", None]
         if isinstance(sources, str):
@@ -138,7 +146,7 @@ class image_annotator(Component):
                     raise ValueError(
                         f"`sources` must a list consisting of elements in {valid_sources}"
                     )
-        
+
         self.show_download_button = show_download_button
         self.show_share_button = (
             (utils.get_space() is not None)
@@ -160,15 +168,19 @@ class image_annotator(Component):
             self.label_list = [(l, i) for i, l in enumerate(label_list)]
         else:
             self.label_list = None
-        
+
         # Parse colors
         self.label_colors = label_colors
         if self.label_colors:
-            if (not isinstance(self.label_colors, list)
+            if (
+                not isinstance(self.label_colors, list)
                 or self.label_list is None
-                or len(self.label_colors) != len(self.label_list)):
-                raise ValueError("``label_colors`` must be a list with the "
-                                 "same length as ``label_list``")
+                or len(self.label_colors) != len(self.label_list)
+            ):
+                raise ValueError(
+                    "``label_colors`` must be a list with the "
+                    "same length as ``label_list``"
+                )
             for i, color in enumerate(self.label_colors):
                 if isinstance(color, str):
                     if len(color) != 7 or color[0] != "#":
@@ -207,7 +219,7 @@ class image_annotator(Component):
 
         if suffix.lower() == "svg":
             return str(file_path)
-        
+
         im = PIL.Image.open(file_path)
         exif = im.getexif()
         # 274 is the code for image rotation and 1 means "correct orientation"
@@ -234,9 +246,9 @@ class image_annotator(Component):
         for box in boxes:
             new_box = {}
             new_box["label"] = box.get("label", "")
-            new_box["color"] = (0,0,0)
+            new_box["color"] = (0, 0, 0)
             if "color" in box:
-                match = re.match(r'rgb\((\d+), (\d+), (\d+)\)', box["color"])
+                match = re.match(r"rgb\((\d+), (\d+), (\d+)\)", box["color"])
                 if match:
                     new_box["color"] = tuple(int(match.group(i)) for i in range(1, 4))
             scale_factor = box.get("scaleFactor", 1)
@@ -247,7 +259,7 @@ class image_annotator(Component):
             parsed_boxes.append(new_box)
         return parsed_boxes
 
-    def preprocess(self, payload: AnnotatedImageData | None) -> dict | None:
+    def preprocess(self, payload: AnnotatedImageData | None) -> AnnotatedImageValue | None:
         """
         Parameters:
             payload: an AnnotatedImageData object.
@@ -256,14 +268,15 @@ class image_annotator(Component):
         """
         if payload is None:
             return None
-        
+
         ret_value = {
             "image": self.preprocess_image(payload.image),
-            "boxes": self.preprocess_boxes(payload.boxes)
+            "boxes": self.preprocess_boxes(payload.boxes),
+            "orientation": payload.orientation,
         }
         return ret_value
 
-    def postprocess(self, value: dict | None) -> AnnotatedImageData | None:
+    def postprocess(self, value: AnnotatedImageValue | None) -> AnnotatedImageData | None:
         """
         Parameters:
             value: A dict with an image and an optional list of boxes or None.
@@ -275,21 +288,27 @@ class image_annotator(Component):
             return None
         if not isinstance(value, dict):
             raise ValueError(f"``value`` must be a dict. Got {type(value)}")
-    
+
         # Check and get boxes
         boxes = value.setdefault("boxes", [])
         if boxes:
             if not isinstance(value["boxes"], (list, tuple)):
-                raise ValueError(f"'boxes' must be a list of dicts. Got "
-                                 f"{type(value['boxes'])}")
+                raise ValueError(
+                    f"'boxes' must be a list of dicts. Got " f"{type(value['boxes'])}"
+                )
             for box in value["boxes"]:
-                if (not isinstance(box, dict)
-                    or not set(box.keys()).issubset({"label", "xmin", "ymin", "xmax", "ymax", "color"})
+                if (
+                    not isinstance(box, dict)
+                    or not set(box.keys()).issubset(
+                        {"label", "xmin", "ymin", "xmax", "ymax", "color"}
+                    )
                     or not set(box.keys()).issuperset({"xmin", "ymin", "xmax", "ymax"})
-                    ):
-                    raise ValueError("Box must be a dict with the following "
-                                     "keys: 'xmin', 'ymin', 'xmax', 'ymax', "
-                                     f"['label', 'color']'. Got {box}")
+                ):
+                    raise ValueError(
+                        "Box must be a dict with the following "
+                        "keys: 'xmin', 'ymin', 'xmax', 'ymax', "
+                        f"['label', 'color']'. Got {box}"
+                    )
 
         # Check and parse image
         image = value.setdefault("image", None)
@@ -303,7 +322,11 @@ class image_annotator(Component):
         else:
             raise ValueError(f"An image must be provided. Got {value}")
         
-        return AnnotatedImageData(image=image, boxes=boxes)
+        orientation = value.setdefault("orientation", 0)
+        if orientation is None:
+            orientation = 0
+
+        return AnnotatedImageData(image=image, boxes=boxes, orientation=orientation)
 
     def process_example(self, value: dict | None) -> FileData | None:
         if value is None:
@@ -334,7 +357,7 @@ class image_annotator(Component):
                     "xmax": 530,
                     "ymax": 500,
                     "label": "Gradio",
-                    "color": (250,185,0),
+                    "color": (250, 185, 0),
                 }
-            ]
+            ],
         }

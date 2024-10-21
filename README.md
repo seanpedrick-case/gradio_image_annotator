@@ -4,8 +4,6 @@
 
 A Gradio component that can be used to annotate images with bounding boxes.
 
-![Demo preview](images/demo.png)
-
 ## Installation
 
 ```bash
@@ -553,8 +551,16 @@ The code snippet below is accurate in cases where the component is used as both 
 
  ```python
  def predict(
-     value: dict | None
- ) -> dict | None:
+     value: AnnotatedImageValue | None
+ ) -> AnnotatedImageValue | None:
      return value
  ```
  
+
+## `AnnotatedImageValue`
+```python
+class AnnotatedImageValue(TypedDict):
+    image: Optional[np.ndarray | PIL.Image.Image | str]
+    boxes: Optional[List[dict]]
+    orientation: Optional[int]
+```

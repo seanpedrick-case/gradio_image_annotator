@@ -5,6 +5,7 @@
 	import Box from "./Box";
 	import { Colors } from './Colors.js';
 	import AnnotatedImageData from "./AnnotatedImageData";
+	import { Undo, Redo } from "@gradio/icons";
 
 	enum Mode {creation, drag}
 
@@ -46,6 +47,9 @@
 	let imageWidth = 0;
 	let imageHeight = 0;
 
+	let imageRotatedWidth = 0;
+	let imageRotatedHeight = 0;
+
 	let editModalVisible = false;
 	let newModalVisible = false;
 
@@ -73,8 +77,29 @@
 		if (ctx) {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			if (image !== null){
-				ctx.drawImage(image, canvasXmin, canvasYmin, imageWidth, imageHeight);
+				switch (value.orientation) {
+					case 0:
+						ctx.drawImage(image, canvasXmin, canvasYmin, imageWidth, imageHeight);
+						break;
+					case 1:
+						ctx.translate(imageWidth, 0);
+						ctx.rotate(Math.PI / 2);
+						ctx.drawImage(image, 0, -canvasXmin, imageHeight, imageWidth);
+						break;
+					case 2:
+						ctx.translate(imageWidth, imageHeight);
+						ctx.rotate(Math.PI);
+						ctx.drawImage(image, -canvasXmin, canvasYmin, imageWidth, imageHeight);
+						break;
+					case 3:
+						ctx.translate(0, imageHeight);
+						ctx.rotate(-Math.PI / 2);
+						ctx.drawImage(image, 0, canvasXmin, imageHeight, imageWidth);
+						break;
+				}
+				ctx.resetTransform();
 			}
+			
 			for (const box of value.boxes.slice().reverse()) {
 				box.render(ctx);
 			}
@@ -309,28 +334,44 @@
 		}
 	}
 
+	function onRotateImage(op: number) {
+		onDeleteBox();
+		value.orientation = (((value.orientation + op) % 4) + 4 ) % 4;
+		console.log(value.orientation);
+		resize();
+		draw();
+	}
+
 	function resize() {
 		if (canvas) {
 			scaleFactor = 1;
 			canvas.width = canvas.clientWidth;
 			if (image !== null) {
-				if (image.width > canvas.width) {
-					scaleFactor = canvas.width / image.width;
-					imageWidth = image.width * scaleFactor;
-					imageHeight = image.height * scaleFactor;
+				if (value.orientation == 0 || value.orientation == 2) {
+					imageRotatedWidth = image.width;
+					imageRotatedHeight = image.height;
+				} else { // (value.orientation == 1 || value.orientation == 3)
+					imageRotatedWidth = image.height;
+					imageRotatedHeight = image.width;
+				}
+
+				if (imageRotatedWidth > canvas.width) {
+					scaleFactor = canvas.width / imageRotatedWidth;
+					imageWidth = imageRotatedWidth * scaleFactor;
+					imageHeight = imageRotatedHeight * scaleFactor;
 					canvasXmin = 0;
 					canvasYmin = 0;
 					canvasXmax = imageWidth;
 					canvasYmax = imageHeight;
 					canvas.height = imageHeight;
 				} else {
-					imageWidth = image.width;
-					imageHeight = image.height;
+					imageWidth = imageRotatedWidth;
+					imageHeight = imageRotatedHeight;
 					var x = (canvas.width - imageWidth) / 2;
 					canvasXmin = x;
 					canvasYmin = 0;
 					canvasXmax = x + imageWidth;
-					canvasYmax = image.height;
+					canvasYmax = imageHeight;
 					canvas.height = imageHeight;
 				}
 			} else {
@@ -489,6 +530,16 @@
 				on:click={() => onDeleteBox()}><Trash/></button
 			>
 		{/if}
+		<button
+			class="icon"
+			aria-label="Rotate counterclockwise"
+			on:click={() => onRotateImage(-1)}><Undo/></button
+		>
+		<button
+			class="icon"
+			aria-label="Rotate clockwise"
+			on:click={() => onRotateImage(1)}><Redo/></button
+		>
 	</span>
 {/if}
 
