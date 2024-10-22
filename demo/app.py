@@ -1,5 +1,6 @@
 import gradio as gr
 from gradio_image_annotation import image_annotator
+import numpy as np
 
 
 example_annotation = {
@@ -52,7 +53,9 @@ examples_crop = [
 ]
 
 
-def crop(annotations):
+def crop(annotations:dict):
+    if angle:= annotations.get("orientation", None):
+        annotations["image"] = np.rot90(annotations["image"], k=-angle)
     if annotations["boxes"]:
         box = annotations["boxes"][0]
         return annotations["image"][
