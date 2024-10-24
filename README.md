@@ -15,6 +15,7 @@ pip install gradio_image_annotation
 ```python
 import gradio as gr
 from gradio_image_annotation import image_annotator
+import numpy as np
 
 
 example_annotation = {
@@ -67,7 +68,9 @@ examples_crop = [
 ]
 
 
-def crop(annotations):
+def crop(annotations:dict):
+    if angle:= annotations.get("orientation", None):
+        annotations["image"] = np.rot90(annotations["image"], k=-angle)
     if annotations["boxes"]:
         box = annotations["boxes"][0]
         return annotations["image"][
@@ -135,7 +138,7 @@ dict | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">A dict or None. The dictionary must contain a key 'image' with either an URL to an image, a numpy image or a PIL image. Optionally it may contain a key 'boxes' with a list of boxes. Each box must be a dict wit the keys: 'xmin', 'ymin', 'xmax' and 'ymax' with the absolute image coordinates of the box. Optionally can also include the keys 'label' and 'color' describing the label and color of the box. Color must be a tuple of RGB values (e.g. `(255,255,255)`).</td>
+<td align="left">A dict or None. The dictionary must contain a key 'image' with either an URL to an image, a numpy image or a PIL image. Optionally it may contain a key 'boxes' with a list of boxes. Each box must be a dict wit the keys: 'xmin', 'ymin', 'xmax' and 'ymax' with the absolute image coordinates of the box. Optionally can also include the keys 'label' and 'color' describing the label and color of the box. Color must be a tuple of RGB values (e.g. `(255,255,255)`). Optionally can also include the keys 'orientation' with a integer between 0 and 3, describing the number of times the image is rotated by 90 degrees in frontend, the rotation is clockwise.</td>
 </tr>
 
 <tr>
@@ -531,7 +534,7 @@ bool | None
 
 | name | description |
 |:-----|:------------|
-| `clear` | This listener is triggered when the user clears the image_annotator using the X button for the component. |
+| `clear` | This listener is triggered when the user clears the image_annotator using the clear button for the component. |
 | `change` | Triggered when the value of the image_annotator changes either because of user input (e.g. a user types in a textbox) OR because of a function update (e.g. an image receives a value from the output of an event trigger). See `.input()` for a listener that is only triggered by user input. |
 | `upload` | This listener is triggered when the user uploads a file into the image_annotator. |
 
