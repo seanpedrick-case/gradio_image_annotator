@@ -370,13 +370,19 @@
 			dispatch("change");
 		}
 	}
-
+	
+	/**
+	 * Rotate the image and all the boxes
+	 * @param op 1: rotate clockwise, -1: rotate counterclockwise
+	 */
 	function onRotateImage(op: number) {
-		onDeleteBox();
 		value.orientation = (((value.orientation + op) % 4) + 4 ) % 4;
 		canvasWindow.orientation = value.orientation;
 
 		resize();
+		for (const box of value.boxes) {
+			box.onRotate(op);
+		}
 		draw();
 	}
 

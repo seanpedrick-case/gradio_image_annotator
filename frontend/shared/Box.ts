@@ -548,4 +548,23 @@ export default class Box {
         document.removeEventListener("pointermove", this.handleResize);
         document.removeEventListener("pointerup", this.stopResize);
     };
+
+    onRotate(op: number): void {
+        const [_xmin, _xmax, _ymin, _ymax] = [this._xmin, this._xmax, this._ymin, this._ymax];
+        switch (op) {
+            case 1:
+                this._xmin = this.canvasWindow.imageWidth - _ymax;
+                this._xmax = this.canvasWindow.imageWidth - _ymin;
+                this._ymin = _xmin;
+                this._ymax = _xmax;
+                break;
+            case -1:
+                this._xmin = _ymin;
+                this._xmax = _ymax;
+                this._ymin = this.canvasWindow.imageHeight - _xmax;
+                this._ymax = this.canvasWindow.imageHeight - _xmin;
+                break;
+        }
+        this.applyUserScale();
+    }
 }

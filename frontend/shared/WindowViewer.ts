@@ -51,7 +51,7 @@ export default class WindowViewer {
         if (this.isDragging) {
 
             let deltaX = event.clientX - this.startDragX;
-			let deltaY = event.clientY - this.startDragY;
+            let deltaY = event.clientY - this.startDragY;
 
             if (this.imageWidth * this.scale > this.canvasWidth){
                 deltaX = clamp(deltaX, this.canvasWidth-this.offsetX-(this.imageWidth*this.scale), -this.offsetX);
@@ -65,15 +65,15 @@ export default class WindowViewer {
                 deltaY = clamp(deltaY, -this.offsetY, this.canvasHeight-this.offsetY-(this.imageHeight*this.scale));
             }
 
-			this.offsetX += deltaX;
-			this.offsetY += deltaY;
+            this.offsetX += deltaX;
+            this.offsetY += deltaY;
 
-			[this.startDragX, this.startDragY] = [event.clientX, event.clientY]
+            [this.startDragX, this.startDragY] = [event.clientX, event.clientY]
             this.renderCallBack();
         }
     };
 
-    setRotatedImage = (image: HTMLImageElement | null): void => {
+    setRotatedImage(image: HTMLImageElement | null): void {
         if (image !== null) {
             if (this.orientation == 0 || this.orientation == 2) {
                 this.imageRotatedWidth = image.width;
@@ -84,7 +84,7 @@ export default class WindowViewer {
             }
         }
     }
-    resize = (width: number, height: number, offsetX: number=0, offsetY: number=0): void => {
+    resize(width: number, height: number, offsetX: number=0, offsetY: number=0): void {
         if (this.canvasWidth == width && this.canvasHeight == height) return;
         this.canvasWidth = width;
         this.canvasHeight = height;
