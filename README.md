@@ -1,13 +1,16 @@
 
-# `gradio_image_annotation`
-<a href="https://pypi.org/project/gradio_image_annotation/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_image_annotation"></a>  
+# `gradio_image_annotation`  
 
 A Gradio component that can be used to annotate images with bounding boxes.
+
+This is a fork of [gradio_image_annotator](https://github.com/edgarGracia/gradio_image_annotator) that supports image rotate, scale and drag.  
+
+Please note that the implementation of this fork is entirely patch based, may not work as expected, and resulting in high CPU usage.
 
 ## Installation
 
 ```bash
-pip install gradio_image_annotation
+pip install git+https://github.com/icyray/gradio_image_annotator.git
 ```
 
 ## Usage
