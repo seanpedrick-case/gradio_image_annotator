@@ -410,7 +410,7 @@ export default class Box {
                 this._ymax = y;
             } else if (y > this._ymin && y < this._ymax && this.creatingAnchorY == "ymax") {
                 this._ymin = y;
-            } else if (y < this.ymin) {
+            } else if (y < this._ymin) {
                 if (this.creatingAnchorY == "ymin") {
                     this._ymax = this._ymin;
                 }
