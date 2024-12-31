@@ -34,8 +34,8 @@ export default class WindowViewer {
     }
     startDrag(event: MouseEvent): void {
         this.isDragging = true;
-        this.startDragX = event.clientX;
-        this.startDragY = event.clientY;
+        this.startDragX = event.clientX - this.offsetX;
+        this.startDragY = event.clientY - this.offsetY;
 
         document.addEventListener("pointermove", this.handleDrag);
         document.addEventListener("pointerup", this.stopDrag);
@@ -50,8 +50,8 @@ export default class WindowViewer {
     handleDrag = (event: MouseEvent): void => {
         if (this.isDragging) {
 
-            let deltaX = event.clientX - this.startDragX;
-            let deltaY = event.clientY - this.startDragY;
+            let deltaX = event.clientX - this.startDragX - this.offsetX;
+            let deltaY = event.clientY - this.startDragY - this.offsetY;
 
             if (this.imageWidth * this.scale > this.canvasWidth){
                 deltaX = clamp(deltaX, this.canvasWidth-this.offsetX-(this.imageWidth*this.scale), -this.offsetX);
@@ -67,8 +67,6 @@ export default class WindowViewer {
 
             this.offsetX += deltaX;
             this.offsetY += deltaY;
-
-            [this.startDragX, this.startDragY] = [event.clientX, event.clientY]
             this.renderCallBack();
         }
     };

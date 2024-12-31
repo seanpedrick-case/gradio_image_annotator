@@ -306,8 +306,8 @@ export default class Box {
 
     startDrag(event: MouseEvent): void {
         this.isDragging = true;
-        this.offsetMouseX = event.clientX;
-        this.offsetMouseY = event.clientY;
+        this.offsetMouseX = event.clientX - this._xmin * this.canvasWindow.scale;
+        this.offsetMouseY = event.clientY - this._ymin * this.canvasWindow.scale;
         document.addEventListener("pointermove", this.handleDrag);
         document.addEventListener("pointerup", this.stopDrag);
     }
@@ -320,8 +320,8 @@ export default class Box {
 
     handleDrag = (event: MouseEvent): void => {
         if (this.isDragging) {
-            let deltaX = (event.clientX - this.offsetMouseX) / this.canvasWindow.scale;
-            let deltaY = (event.clientY - this.offsetMouseY) / this.canvasWindow.scale;
+            let deltaX = (event.clientX - this.offsetMouseX) / this.canvasWindow.scale - this._xmin;
+            let deltaY = (event.clientY - this.offsetMouseY) / this.canvasWindow.scale - this._ymin;
 
             const canvasW = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale;
             const canvasH = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
@@ -331,9 +331,6 @@ export default class Box {
             this._ymin += deltaY;
             this._xmax += deltaX;
             this._ymax += deltaY;
-
-            this.offsetMouseX = event.clientX;
-            this.offsetMouseY = event.clientY;
 
             this.applyUserScale();
             // this.updateHandles();
@@ -476,8 +473,8 @@ export default class Box {
     startResize(handleIndex: number, event: MouseEvent): void {
         this.resizingHandleIndex = handleIndex;
         this.isResizing = true;
-        this.offsetMouseX = event.clientX;
-        this.offsetMouseY = event.clientY;
+        this.offsetMouseX = event.clientX - this.resizeHandles[handleIndex].xmin;
+        this.offsetMouseY = event.clientY - this.resizeHandles[handleIndex].ymin;
         document.addEventListener("pointermove", this.handleResize);
         document.addEventListener("pointerup", this.stopResize);
     }
@@ -486,8 +483,8 @@ export default class Box {
         if (this.isResizing) {
             const mouseX = event.clientX;
             const mouseY = event.clientY;
-            const deltaX = (mouseX - this.offsetMouseX) / this.canvasWindow.scale;
-            const deltaY = (mouseY - this.offsetMouseY) / this.canvasWindow.scale;
+            const deltaX = (mouseX - this.offsetMouseX - this.resizeHandles[this.resizingHandleIndex].xmin) / this.canvasWindow.scale;
+            const deltaY = (mouseY - this.offsetMouseY - this.resizeHandles[this.resizingHandleIndex].ymin) / this.canvasWindow.scale;
             const canvasW = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale;
             const canvasH = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
             switch (this.resizingHandleIndex) {
@@ -532,9 +529,6 @@ export default class Box {
                     this._xmin = clamp(this._xmin, 0, this._xmax - this.minSize);
                     break;
             }
-
-            this.offsetMouseX = event.clientX;
-            this.offsetMouseY = event.clientY;
 
             // Update the resize handles
             this.applyUserScale();

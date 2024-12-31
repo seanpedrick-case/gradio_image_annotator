@@ -396,8 +396,8 @@
 			if (image !== null) {
 				if (canvasWindow.imageRotatedWidth > canvas.width) {
 					scaleFactor = canvas.width / canvasWindow.imageRotatedWidth;
-					imageWidth = canvasWindow.imageRotatedWidth * scaleFactor;
-					imageHeight = canvasWindow.imageRotatedHeight * scaleFactor;
+					imageWidth = Math.round(canvasWindow.imageRotatedWidth * scaleFactor);
+					imageHeight = Math.round(canvasWindow.imageRotatedHeight * scaleFactor);
 					canvasXmin = 0;
 					canvasYmin = 0;
 					canvasXmax = imageWidth;
