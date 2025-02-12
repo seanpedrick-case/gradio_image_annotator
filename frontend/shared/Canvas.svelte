@@ -558,7 +558,38 @@
 </div>
 
 {#if interactive}
-	<span class="canvas-control">
+	<span class="canvas-control top">
+		<button
+			class="icon"
+			class:selected={mode === Mode.creation}
+			aria-label="Create box"
+			on:click={() => setCreateMode()}><BoundingBox/></button
+		>
+		<button
+			class="icon"
+			class:selected={mode === Mode.drag}
+			aria-label="Edit boxes"
+			on:click={() => setDragMode()}><Hand/></button
+		>
+		{#if showRemoveButton}
+			<button
+				class="icon"
+				aria-label="Remove boxes"
+				on:click={() => onDeleteBox()}><Trash/></button
+			>
+		{/if}
+		<button
+			class="icon"
+			aria-label="Rotate counterclockwise"
+			on:click={() => onRotateImage(-1)}><Undo/></button
+		>
+		<button
+			class="icon"
+			aria-label="Rotate clockwise"
+			on:click={() => onRotateImage(1)}><Redo/></button
+		>
+	</span>
+	<span class="canvas-control bottom">
 		<button
 			class="icon"
 			class:selected={mode === Mode.creation}
@@ -629,12 +660,21 @@
 		justify-content: center;
 		border-top: 1px solid var(--border-color-primary);
 		width: 95%;
-		bottom: 0;
 		left: 0;
 		right: 0;
 		margin-left: auto;
 		margin-right: auto;
 		margin-top: var(--size-2);
+	}
+
+	.canvas-control.top {
+		position: absolute;
+		top: 0;
+	}
+
+	.canvas-control.bottom {
+		position: absolute;
+		bottom: 0;
 	}
 
 	.icon {
