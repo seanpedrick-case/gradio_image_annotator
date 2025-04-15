@@ -23,6 +23,7 @@
 	export let singleBox: boolean;
 	export let showRemoveButton: boolean;
 	export let handlesCursor: boolean;
+	export let useDefaultLabel: boolean;
 
 	let resolved_src: typeof src;
 
@@ -68,5 +69,6 @@
 	{singleBox}
 	{showRemoveButton}
 	{handlesCursor}
+	{useDefaultLabel}
 	imageUrl={resolved_src}
 />

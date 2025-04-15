@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher } from "svelte";
-	import { BoundingBox, Hand, Trash } from "./icons/index";
+	import { BoundingBox, Hand, Trash, Label } from "./icons/index";
 	import ModalBox from "./ModalBox.svelte";
 	import Box from "./Box";
 	import { Colors } from './Colors.js';
@@ -24,6 +24,7 @@
 	export let singleBox: boolean = false;
 	export let showRemoveButton: boolean = null;
 	export let handlesCursor: boolean = true;
+	export let useDefaultLabel: boolean = false;
 
 	if (showRemoveButton === null) {
 		showRemoveButton = (disableEditBoxes);
@@ -51,6 +52,13 @@
 
 	let editModalVisible = false;
 	let newModalVisible = false;
+	let editDefaultLabelVisible = false;
+
+	let labelDetailLock = useDefaultLabel;
+	let defaultLabelCache = {
+		label: "",
+		color: ""
+	};
 
 	const dispatch = createEventDispatcher<{
 		change: undefined;
@@ -299,7 +307,11 @@
 				onDeleteBox();
 			} else {
 				if (!disableEditBoxes) {
-					newModalVisible = true;
+					if (labelDetailLock) {
+						onUseDefaultLabelModalNew();
+					} else{
+						newModalVisible = true;
+					}
 				}
 				if (singleBox) {
 					setDragMode();
@@ -347,9 +359,13 @@
 		let label = detail.label;
 		let color = detail.color;
 		let ret = detail.ret;
+		let lock = detail.lock;
 		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
 			let box = value.boxes[selectedBox];
 			if (ret == 1) {
+				labelDetailLock = lock;
+				defaultLabelCache.label = label;
+				defaultLabelCache.color = color;
 				box.label = label;
 				box.color = colorHexToRGB(color);
 				draw();
@@ -357,6 +373,32 @@
 			} else {
 				onDeleteBox();
 			}
+		}
+	}
+
+	function onDefaultLabelEditChange(event) {
+		editDefaultLabelVisible = false;
+		const { detail } = event;
+		let label = detail.label;
+		let color = detail.color;
+		let ret = detail.ret;
+		let lock = detail.lock;
+		if (ret == 1) {
+			labelDetailLock = lock;
+			defaultLabelCache.label = label;
+			defaultLabelCache.color = color;
+		}
+	}
+
+	function onUseDefaultLabelModalNew(){
+		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
+			let box = value.boxes[selectedBox];
+			box.label = defaultLabelCache.label;
+			if (defaultLabelCache.color !== "") {
+				box.color = colorHexToRGB(defaultLabelCache.color);
+			}
+			draw();
+			dispatch("change");
 		}
 	}
 
@@ -513,6 +555,8 @@
 					choicesColors.push(colorRGBAToHex(color));
 				}
 			}
+			defaultLabelCache.label = choices[0][0]
+			defaultLabelCache.color = choicesColors[0]
 		}
 
 		ctx = canvas.getContext("2d");
@@ -578,6 +622,13 @@
 				on:click={() => onDeleteBox()}><Trash/></button
 			>
 		{/if}
+		{#if !disableEditBoxes && labelDetailLock}
+		<button
+			class="icon"
+			aria-label="Edit label"
+			on:click={() => editDefaultLabelVisible = true}><Label/></button
+		>
+		{/if}
 		<button
 			class="icon"
 			aria-label="Rotate counterclockwise"
@@ -611,6 +662,20 @@
 		choicesColors={choicesColors}
 		label={selectedBox >= 0 && selectedBox < value.boxes.length ? value.boxes[selectedBox].label : ""}
 		color={selectedBox >= 0 && selectedBox < value.boxes.length ? colorRGBAToHex(value.boxes[selectedBox].color) : ""}
+		labelDetailLock = {labelDetailLock}
+	/>
+{/if}
+
+{#if editDefaultLabelVisible}
+	<ModalBox
+		on:change={onDefaultLabelEditChange}
+		on:enter{onDefaultLabelEditChange}
+		choices={choices}
+		showRemove={false}
+		choicesColors={choicesColors}
+		label={selectedBox >= 0 && selectedBox < value.boxes.length ? value.boxes[selectedBox].label : ""}
+		color={selectedBox >= 0 && selectedBox < value.boxes.length ? colorRGBAToHex(value.boxes[selectedBox].color) : ""}
+		labelDetailLock = {labelDetailLock}
 	/>
 {/if}
 

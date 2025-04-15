@@ -39,6 +39,7 @@
 	export let max_file_size: number | null = null;
 	export let cli_upload: Client["upload"];
 	export let stream_handler: Client["stream_factory"];
+	export let useDefaultLabel: boolean;
 
 	let upload: Upload;
 	let uploading = false;
@@ -183,6 +184,7 @@
 					{showRemoveButton}
 					{handlesCursor}
 					{boxSelectedThickness}
+					{useDefaultLabel}
 					src={value.image.url}
 				/>
 			</div>

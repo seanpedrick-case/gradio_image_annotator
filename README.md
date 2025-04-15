@@ -530,6 +530,19 @@ bool | None
 <td align="left"><code>True</code></td>
 <td align="left">If True, the cursor will change when hovering over box handles in drag mode. Can be CPU-intensive.</td>
 </tr>
+
+<tr>
+<td align="left"><code>use_default_label</code></td>
+<td align="left" style="width: 25%;">
+
+```python
+bool
+```
+
+</td>
+<td align="left"><code>False</code></td>
+<td align="left">If True, the first item in label_list will be used as the default label when creating boxes.</td>
+</tr>
 </tbody></table>
 
 
