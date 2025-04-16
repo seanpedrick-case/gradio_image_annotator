@@ -303,14 +303,14 @@ class image_annotator(Component):
                 if (
                     not isinstance(box, dict)
                     or not set(box.keys()).issubset(
-                        {"label", "xmin", "ymin", "xmax", "ymax", "color"}
+                        {"label", "xmin", "ymin", "xmax", "ymax", "color", "id", "text"}
                     )
                     or not set(box.keys()).issuperset({"xmin", "ymin", "xmax", "ymax"})
                 ):
                     raise ValueError(
-                        "Box must be a dict with the following "
-                        "keys: 'xmin', 'ymin', 'xmax', 'ymax', "
-                        f"['label', 'color']'. Got {box}"
+                        "Box must be a dict with at least the keys: "
+                        "'xmin', 'ymin', 'xmax', 'ymax', and may optionally include "
+                        "'label', 'color', 'id', 'text'. Got {box}"
                     )
 
         # Check and parse image
