@@ -129,6 +129,7 @@
 	}
 
 	function handlePointerDown(event: PointerEvent) {
+		console.log("handlePointerDown called. Current mode:", mode); // ADD THIS LOG
 		if (!interactive) {
 			return;
 		}
@@ -247,6 +248,9 @@
 		const rect = canvas.getBoundingClientRect();
 		const x = (event.clientX - rect.left - canvasWindow.offsetX) / scaleFactor / canvasWindow.scale;
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / scaleFactor / canvasWindow.scale;
+
+		console.log("createBox initial x, y:", x, y); // ADD THIS LOG
+
 		let color;
         if (choicesColors.length > 0) {
             color = colorHexToRGB(choicesColors[0]);
@@ -260,14 +264,13 @@
             color = Colors[value.boxes.length % Colors.length];
         }
 
-        // ADDED: Assign a unique ID
-        // and default text for a newly created box
-        // For simplicity, let's use a timestamp+random for demo, real-world might need a UUID lib
+        // ADDED: Assign a unique ID        
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let newBoxId = '';
         for (let i = 0; i < 12; i++) {
             newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
         }
+		// and default text for a newly created box
         const newBoxText = ""; // Default text is empty
 
         let box = new Box(
@@ -285,13 +288,13 @@
             y,
             color,
             boxAlpha,
+			 // ADDED: Pass id and text to the Box constructor
+			newBoxId,
+            newBoxText,
             boxMinSize,
             handleSize,
             boxThickness,
-            boxSelectedThickness,
-            // ADDED: Pass id and text to the Box constructor
-            newBoxId,
-            newBoxText
+            boxSelectedThickness           
         );
         box.startCreating(event, rect.left, rect.top);
         if (singleBox) {
@@ -303,6 +306,8 @@
         selectBox(0); // Select the newly created box
         draw();
         dispatch("change"); // Trigger change event to send the new box data to backend
+
+		console.log("new box:", value.boxes); // ADD THIS LOG
     }
 
 	function setCreateMode() {
@@ -530,8 +535,8 @@
                 // If it's a raw dictionary from the backend, create a new Box instance
                 let color = "";
                 let label = "";
-                let id = undefined;
-                let text = undefined;
+                let id = "";
+                let text = "";
 
                 // Extract properties from the raw dictionary
                  if (boxData.hasOwnProperty("color")) {
@@ -549,6 +554,15 @@
                  if (boxData.hasOwnProperty("id")) {
                      id = boxData["id"];
                  }
+				 else {
+					// ADDED: Assign a unique ID        
+					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+					let newBoxId = '';
+					for (let i = 0; i < 12; i++) {
+						newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
+					}
+					id = newBoxId
+				 }
                  if (boxData.hasOwnProperty("text")) {
                      text = boxData["text"];
                  }
@@ -578,12 +592,12 @@
                      ymax,
                      color,
                      boxAlpha,
+					 id, // Pass id
+                     text, // Pass text
                      boxMinSize,
                      handleSize,
                      boxThickness,
-                     boxSelectedThickness,
-                     id, // Pass id
-                     text // Pass text
+                     boxSelectedThickness                     
                  );
                  // Apply the backend scale factor if provided
                  boxInstance.setScaleFactor(backendScaleFactor);
