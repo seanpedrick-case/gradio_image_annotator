@@ -21,7 +21,7 @@ export default class Box {
     ymin: number;
     xmax: number;
     ymax: number;
-    _xmin: number;
+    _xmin: number; // Store original image coordinates
     _ymin: number;
     _xmax: number;
     _ymax: number;
@@ -56,6 +56,10 @@ export default class Box {
     }[];
     canvasWindow: WindowViewer;
 
+    // ADDED: Properties for id and text
+    id?: string | number; // Assuming id can be string or number, and is optional
+    text?: string; // Assuming text is optional
+
     constructor(
         renderCallBack: () => void,
         onFinishCreation: () => void,
@@ -76,6 +80,9 @@ export default class Box {
         thickness: number = 2,
         selectedThickness: number = 4,
         scaleFactor: number = 1,
+        // ADDED: Optional parameters for id and text
+        id?: string | number,
+        text?: string
     ) {
         this.renderCallBack = renderCallBack;
         this.onFinishCreation = onFinishCreation;
@@ -92,10 +99,12 @@ export default class Box {
         this._ymin = ymin;
         this._xmax = xmax;
         this._ymax = ymax;
-        this.xmin = this._xmin * this.canvasWindow.scale;
+        // ... (rest of coordinate assignments and scaling) ...
+        this.xmin = this._xmin * this.canvasWindow.scale; // Re-add coordinate assignments if needed, or handle in applyUserScale
         this.ymin = this._ymin * this.canvasWindow.scale;
         this.xmax = this._xmax * this.canvasWindow.scale;
         this.ymax = this._ymax * this.canvasWindow.scale;
+
         this.isResizing = false;
         this.isSelected = false;
         this.offsetMouseX = 0;
@@ -110,17 +119,25 @@ export default class Box {
         this.alpha = alpha;
         this.creatingAnchorX = "xmin";
         this.creatingAnchorY = "ymin";
+
+        // ADDED: Assign id and text from constructor arguments
+        this.id = id;
+        this.text = text;
     }
 
     toJSON() {
         return {
             label: this.label,
-            xmin: this._xmin,
+            xmin: this._xmin, // Use original image coordinates
             ymin: this._ymin,
             xmax: this._xmax,
             ymax: this._ymax,
             color: this.color,
-            scaleFactor: this.scaleFactor,
+            scaleFactor: this.scaleFactor, // Keep scaleFactor as it's part of the data structure
+
+            // ADDED: Include id and text in the JSON output
+            id: this.id,
+            text: this.text,
         };
     }
 

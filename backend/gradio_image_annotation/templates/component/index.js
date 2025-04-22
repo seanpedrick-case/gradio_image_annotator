@@ -249,17 +249,17 @@ function pf(l) {
   };
 }
 function vf(l, e, t) {
-  let { $$slots: n = {}, $$scope: i } = e, { height: s = void 0 } = e, { width: o = void 0 } = e, { elem_id: r = "" } = e, { elem_classes: a = [] } = e, { variant: f = "solid" } = e, { border_mode: c = "base" } = e, { padding: u = !0 } = e, { type: _ = "normal" } = e, { test_id: d = void 0 } = e, { explicit_call: g = !1 } = e, { container: m = !0 } = e, { visible: b = !0 } = e, { allow_overflow: p = !0 } = e, { scale: w = null } = e, { min_width: h = 0 } = e, v = _ === "fieldset" ? "fieldset" : "div";
-  const y = (k) => {
-    if (k !== void 0) {
-      if (typeof k == "number")
-        return k + "px";
-      if (typeof k == "string")
-        return k;
+  let { $$slots: n = {}, $$scope: i } = e, { height: s = void 0 } = e, { width: o = void 0 } = e, { elem_id: r = "" } = e, { elem_classes: a = [] } = e, { variant: f = "solid" } = e, { border_mode: c = "base" } = e, { padding: u = !0 } = e, { type: _ = "normal" } = e, { test_id: d = void 0 } = e, { explicit_call: g = !1 } = e, { container: m = !0 } = e, { visible: b = !0 } = e, { allow_overflow: p = !0 } = e, { scale: w = null } = e, { min_width: h = 0 } = e, k = _ === "fieldset" ? "fieldset" : "div";
+  const S = (C) => {
+    if (C !== void 0) {
+      if (typeof C == "number")
+        return C + "px";
+      if (typeof C == "string")
+        return C;
     }
   };
-  return l.$$set = (k) => {
-    "height" in k && t(0, s = k.height), "width" in k && t(1, o = k.width), "elem_id" in k && t(2, r = k.elem_id), "elem_classes" in k && t(3, a = k.elem_classes), "variant" in k && t(4, f = k.variant), "border_mode" in k && t(5, c = k.border_mode), "padding" in k && t(6, u = k.padding), "type" in k && t(16, _ = k.type), "test_id" in k && t(7, d = k.test_id), "explicit_call" in k && t(8, g = k.explicit_call), "container" in k && t(9, m = k.container), "visible" in k && t(10, b = k.visible), "allow_overflow" in k && t(11, p = k.allow_overflow), "scale" in k && t(12, w = k.scale), "min_width" in k && t(13, h = k.min_width), "$$scope" in k && t(17, i = k.$$scope);
+  return l.$$set = (C) => {
+    "height" in C && t(0, s = C.height), "width" in C && t(1, o = C.width), "elem_id" in C && t(2, r = C.elem_id), "elem_classes" in C && t(3, a = C.elem_classes), "variant" in C && t(4, f = C.variant), "border_mode" in C && t(5, c = C.border_mode), "padding" in C && t(6, u = C.padding), "type" in C && t(16, _ = C.type), "test_id" in C && t(7, d = C.test_id), "explicit_call" in C && t(8, g = C.explicit_call), "container" in C && t(9, m = C.container), "visible" in C && t(10, b = C.visible), "allow_overflow" in C && t(11, p = C.allow_overflow), "scale" in C && t(12, w = C.scale), "min_width" in C && t(13, h = C.min_width), "$$scope" in C && t(17, i = C.$$scope);
   }, [
     s,
     o,
@@ -275,8 +275,8 @@ function vf(l, e, t) {
     p,
     w,
     h,
-    v,
-    y,
+    k,
+    S,
     _,
     i,
     n
@@ -2392,29 +2392,29 @@ function bd(l, e, t) {
   let n;
   var i = this && this.__awaiter || function(g, m, b, p) {
     function w(h) {
-      return h instanceof b ? h : new b(function(v) {
-        v(h);
+      return h instanceof b ? h : new b(function(k) {
+        k(h);
       });
     }
-    return new (b || (b = Promise))(function(h, v) {
-      function y(C) {
+    return new (b || (b = Promise))(function(h, k) {
+      function S(v) {
         try {
-          S(p.next(C));
+          y(p.next(v));
         } catch (E) {
-          v(E);
+          k(E);
         }
       }
-      function k(C) {
+      function C(v) {
         try {
-          S(p.throw(C));
+          y(p.throw(v));
         } catch (E) {
-          v(E);
+          k(E);
         }
       }
-      function S(C) {
-        C.done ? h(C.value) : w(C.value).then(y, k);
+      function y(v) {
+        v.done ? h(v.value) : w(v.value).then(S, C);
       }
-      S((p = p.apply(g, m || [])).next());
+      y((p = p.apply(g, m || [])).next());
     });
   };
   let { sources: s } = e, { active_source: o } = e, { handle_clear: r = () => {
@@ -2576,13 +2576,13 @@ function wo(l, e = {}) {
       if (d)
         return d = !1, r = null, !1;
       u = Math.min(u + _, 1);
-      const v = {
+      const k = {
         inv_mass: u,
         opts: m,
         settled: !0,
         dt: (h - o) * 60 / 1e3
-      }, y = gs(v, f, l, c);
-      return o = h, f = l, t.set(l = y), v.settled && (r = null), !v.settled;
+      }, S = gs(k, f, l, c);
+      return o = h, f = l, t.set(l = S), k.settled && (r = null), !k.settled;
     })), new Promise((h) => {
       r.promise.then(() => {
         w === a && h();
@@ -2663,24 +2663,24 @@ function Ad(l, e, t) {
       });
     }
     return new (m || (m = Promise))(function(w, h) {
-      function v(S) {
+      function k(y) {
         try {
-          k(b.next(S));
-        } catch (C) {
-          h(C);
+          C(b.next(y));
+        } catch (v) {
+          h(v);
         }
       }
-      function y(S) {
+      function S(y) {
         try {
-          k(b.throw(S));
-        } catch (C) {
-          h(C);
+          C(b.throw(y));
+        } catch (v) {
+          h(v);
         }
       }
-      function k(S) {
-        S.done ? w(S.value) : p(S.value).then(v, y);
+      function C(y) {
+        y.done ? w(y.value) : p(y.value).then(k, S);
       }
-      k((b = b.apply(d, g || [])).next());
+      C((b = b.apply(d, g || [])).next());
     });
   };
   let { margin: o = !0 } = e;
@@ -2832,7 +2832,7 @@ function Od(l) {
     l[18] && /*show_progress*/
     l[6] === "full" && Bo(l)
   );
-  function u(h, v) {
+  function u(h, k) {
     if (
       /*progress*/
       h[7]
@@ -2853,7 +2853,7 @@ function Od(l) {
     l[5] && Eo(l)
   );
   const m = [Qd, Jd], b = [];
-  function p(h, v) {
+  function p(h, k) {
     return (
       /*last_progress_level*/
       h[15] != null ? 0 : (
@@ -2879,34 +2879,34 @@ function Od(l) {
         l[8] === "default"
       );
     },
-    m(h, v) {
-      c && c.m(h, v), F(h, e, v), F(h, t, v), d && d.m(t, null), an(t, n), g && g.m(t, null), F(h, i, v), ~s && b[s].m(h, v), F(h, r, v), w && w.m(h, v), F(h, a, v), f = !0;
+    m(h, k) {
+      c && c.m(h, k), F(h, e, k), F(h, t, k), d && d.m(t, null), an(t, n), g && g.m(t, null), F(h, i, k), ~s && b[s].m(h, k), F(h, r, k), w && w.m(h, k), F(h, a, k), f = !0;
     },
-    p(h, v) {
+    p(h, k) {
       /*variant*/
       h[8] === "default" && /*show_eta_bar*/
       h[18] && /*show_progress*/
-      h[6] === "full" ? c ? c.p(h, v) : (c = Bo(h), c.c(), c.m(e.parentNode, e)) : c && (c.d(1), c = null), _ === (_ = u(h)) && d ? d.p(h, v) : (d && d.d(1), d = _ && _(h), d && (d.c(), d.m(t, n))), /*timer*/
-      h[5] ? g ? g.p(h, v) : (g = Eo(h), g.c(), g.m(t, null)) : g && (g.d(1), g = null), (!f || v[0] & /*variant*/
+      h[6] === "full" ? c ? c.p(h, k) : (c = Bo(h), c.c(), c.m(e.parentNode, e)) : c && (c.d(1), c = null), _ === (_ = u(h)) && d ? d.p(h, k) : (d && d.d(1), d = _ && _(h), d && (d.c(), d.m(t, n))), /*timer*/
+      h[5] ? g ? g.p(h, k) : (g = Eo(h), g.c(), g.m(t, null)) : g && (g.d(1), g = null), (!f || k[0] & /*variant*/
       256) && Ne(
         t,
         "meta-text-center",
         /*variant*/
         h[8] === "center"
-      ), (!f || v[0] & /*variant*/
+      ), (!f || k[0] & /*variant*/
       256) && Ne(
         t,
         "meta-text",
         /*variant*/
         h[8] === "default"
       );
-      let y = s;
-      s = p(h), s === y ? ~s && b[s].p(h, v) : (o && (ws(), dt(b[y], 1, 1, () => {
-        b[y] = null;
-      }), bs()), ~s ? (o = b[s], o ? o.p(h, v) : (o = b[s] = m[s](h), o.c()), it(o, 1), o.m(r.parentNode, r)) : o = null), /*timer*/
+      let S = s;
+      s = p(h), s === S ? ~s && b[s].p(h, k) : (o && (ws(), dt(b[S], 1, 1, () => {
+        b[S] = null;
+      }), bs()), ~s ? (o = b[s], o ? o.p(h, k) : (o = b[s] = m[s](h), o.c()), it(o, 1), o.m(r.parentNode, r)) : o = null), /*timer*/
       h[5] ? w && (ws(), dt(w, 1, 1, () => {
         w = null;
-      }), bs()) : w ? (w.p(h, v), v[0] & /*timer*/
+      }), bs()) : w ? (w.p(h, k), k[0] & /*timer*/
       32 && it(w, 1)) : (w = Ho(h), w.c(), it(w, 1), w.m(a.parentNode, a));
     },
     i(h) {
@@ -3626,20 +3626,20 @@ function n1(l, e, t) {
   let n, { $$slots: i = {}, $$scope: s } = e;
   this && this.__awaiter;
   const o = Fd();
-  let { i18n: r } = e, { eta: a = null } = e, { queue_position: f } = e, { queue_size: c } = e, { status: u } = e, { scroll_to_output: _ = !1 } = e, { timer: d = !0 } = e, { show_progress: g = "full" } = e, { message: m = null } = e, { progress: b = null } = e, { variant: p = "default" } = e, { loading_text: w = "Loading..." } = e, { absolute: h = !0 } = e, { translucent: v = !1 } = e, { border: y = !1 } = e, { autoscroll: k } = e, S, C = !1, E = 0, q = 0, W = null, A = null, U = 0, V = null, G, J = null, ae = !0;
+  let { i18n: r } = e, { eta: a = null } = e, { queue_position: f } = e, { queue_size: c } = e, { status: u } = e, { scroll_to_output: _ = !1 } = e, { timer: d = !0 } = e, { show_progress: g = "full" } = e, { message: m = null } = e, { progress: b = null } = e, { variant: p = "default" } = e, { loading_text: w = "Loading..." } = e, { absolute: h = !0 } = e, { translucent: k = !1 } = e, { border: S = !1 } = e, { autoscroll: C } = e, y, v = !1, E = 0, z = 0, W = null, A = null, U = 0, V = null, G, J = null, ae = !0;
   const R = () => {
-    t(0, a = t(27, W = t(19, j = null))), t(25, E = performance.now()), t(26, q = 0), C = !0, P();
+    t(0, a = t(27, W = t(19, j = null))), t(25, E = performance.now()), t(26, z = 0), v = !0, P();
   };
   function P() {
     requestAnimationFrame(() => {
-      t(26, q = (performance.now() - E) / 1e3), C && P();
+      t(26, z = (performance.now() - E) / 1e3), v && P();
     });
   }
   function M() {
-    t(26, q = 0), t(0, a = t(27, W = t(19, j = null))), C && (C = !1);
+    t(26, z = 0), t(0, a = t(27, W = t(19, j = null))), v && (v = !1);
   }
   Yd(() => {
-    C && M();
+    v && M();
   });
   let j = null;
   function O(I) {
@@ -3652,15 +3652,15 @@ function n1(l, e, t) {
   };
   function be(I) {
     yo[I ? "unshift" : "push"](() => {
-      S = I, t(13, S);
+      y = I, t(13, y);
     });
   }
   return l.$$set = (I) => {
-    "i18n" in I && t(1, r = I.i18n), "eta" in I && t(0, a = I.eta), "queue_position" in I && t(2, f = I.queue_position), "queue_size" in I && t(3, c = I.queue_size), "status" in I && t(4, u = I.status), "scroll_to_output" in I && t(22, _ = I.scroll_to_output), "timer" in I && t(5, d = I.timer), "show_progress" in I && t(6, g = I.show_progress), "message" in I && t(23, m = I.message), "progress" in I && t(7, b = I.progress), "variant" in I && t(8, p = I.variant), "loading_text" in I && t(9, w = I.loading_text), "absolute" in I && t(10, h = I.absolute), "translucent" in I && t(11, v = I.translucent), "border" in I && t(12, y = I.border), "autoscroll" in I && t(24, k = I.autoscroll), "$$scope" in I && t(29, s = I.$$scope);
+    "i18n" in I && t(1, r = I.i18n), "eta" in I && t(0, a = I.eta), "queue_position" in I && t(2, f = I.queue_position), "queue_size" in I && t(3, c = I.queue_size), "status" in I && t(4, u = I.status), "scroll_to_output" in I && t(22, _ = I.scroll_to_output), "timer" in I && t(5, d = I.timer), "show_progress" in I && t(6, g = I.show_progress), "message" in I && t(23, m = I.message), "progress" in I && t(7, b = I.progress), "variant" in I && t(8, p = I.variant), "loading_text" in I && t(9, w = I.loading_text), "absolute" in I && t(10, h = I.absolute), "translucent" in I && t(11, k = I.translucent), "border" in I && t(12, S = I.border), "autoscroll" in I && t(24, C = I.autoscroll), "$$scope" in I && t(29, s = I.$$scope);
   }, l.$$.update = () => {
     l.$$.dirty[0] & /*eta, old_eta, timer_start, eta_from_start*/
     436207617 && (a === null && t(0, a = W), a != null && W !== a && (t(28, A = (performance.now() - E) / 1e3 + a), t(19, j = A.toFixed(1)), t(27, W = a))), l.$$.dirty[0] & /*eta_from_start, timer_diff*/
-    335544320 && t(17, U = A === null || A <= 0 || !q ? null : Math.min(q / A, 1)), l.$$.dirty[0] & /*progress*/
+    335544320 && t(17, U = A === null || A <= 0 || !z ? null : Math.min(z / A, 1)), l.$$.dirty[0] & /*progress*/
     128 && b != null && t(18, ae = !1), l.$$.dirty[0] & /*progress, progress_level, progress_bar, last_progress_level*/
     114816 && (b != null ? t(14, V = b.map((I) => {
       if (I.index != null && I.length != null)
@@ -3669,9 +3669,9 @@ function n1(l, e, t) {
         return I.progress;
     })) : t(14, V = null), V ? (t(15, G = V[V.length - 1]), J && (G === 0 ? t(16, J.style.transition = "0", J) : t(16, J.style.transition = "150ms", J))) : t(15, G = void 0)), l.$$.dirty[0] & /*status*/
     16 && (u === "pending" ? R() : M()), l.$$.dirty[0] & /*el, scroll_to_output, status, autoscroll*/
-    20979728 && S && _ && (u === "pending" || u === "complete") && t1(S, k), l.$$.dirty[0] & /*status, message*/
+    20979728 && y && _ && (u === "pending" || u === "complete") && t1(y, C), l.$$.dirty[0] & /*status, message*/
     8388624, l.$$.dirty[0] & /*timer_diff*/
-    67108864 && t(20, n = q.toFixed(1));
+    67108864 && t(20, n = z.toFixed(1));
   }, [
     a,
     r,
@@ -3684,9 +3684,9 @@ function n1(l, e, t) {
     p,
     w,
     h,
-    v,
-    y,
+    k,
     S,
+    y,
     V,
     G,
     J,
@@ -3697,9 +3697,9 @@ function n1(l, e, t) {
     o,
     _,
     m,
-    k,
+    C,
     E,
-    q,
+    z,
     W,
     A,
     s,
@@ -4092,29 +4092,29 @@ function p1(l, e, t) {
   let i = Xo(e, n), { $$slots: s = {}, $$scope: o } = e;
   var r = this && this.__awaiter || function(g, m, b, p) {
     function w(h) {
-      return h instanceof b ? h : new b(function(v) {
-        v(h);
+      return h instanceof b ? h : new b(function(k) {
+        k(h);
       });
     }
-    return new (b || (b = Promise))(function(h, v) {
-      function y(C) {
+    return new (b || (b = Promise))(function(h, k) {
+      function S(v) {
         try {
-          S(p.next(C));
+          y(p.next(v));
         } catch (E) {
-          v(E);
+          k(E);
         }
       }
-      function k(C) {
+      function C(v) {
         try {
-          S(p.throw(C));
+          y(p.throw(v));
         } catch (E) {
-          v(E);
+          k(E);
         }
       }
-      function S(C) {
-        C.done ? h(C.value) : w(C.value).then(y, k);
+      function y(v) {
+        v.done ? h(v.value) : w(v.value).then(S, C);
       }
-      S((p = p.apply(g, m || [])).next());
+      y((p = p.apply(g, m || [])).next());
     });
   };
   let { href: a = void 0 } = e, { download: f } = e;
@@ -4341,30 +4341,30 @@ function A1(l) {
 }
 function W1(l, e, t) {
   var n = this && this.__awaiter || function(m, b, p, w) {
-    function h(v) {
-      return v instanceof p ? v : new p(function(y) {
-        y(v);
+    function h(k) {
+      return k instanceof p ? k : new p(function(S) {
+        S(k);
       });
     }
-    return new (p || (p = Promise))(function(v, y) {
-      function k(E) {
-        try {
-          C(w.next(E));
-        } catch (q) {
-          y(q);
-        }
-      }
-      function S(E) {
-        try {
-          C(w.throw(E));
-        } catch (q) {
-          y(q);
-        }
-      }
+    return new (p || (p = Promise))(function(k, S) {
       function C(E) {
-        E.done ? v(E.value) : h(E.value).then(k, S);
+        try {
+          v(w.next(E));
+        } catch (z) {
+          S(z);
+        }
       }
-      C((w = w.apply(m, b || [])).next());
+      function y(E) {
+        try {
+          v(w.throw(E));
+        } catch (z) {
+          S(z);
+        }
+      }
+      function v(E) {
+        E.done ? k(E.value) : h(E.value).then(C, y);
+      }
+      v((w = w.apply(m, b || [])).next());
     });
   };
   let { upload_id: i } = e, { root: s } = e, { files: o } = e, { stream_handler: r } = e, a, f = !1, c, u, _ = o.map((m) => Object.assign(Object.assign({}, m), { progress: 0 }));
@@ -4884,8 +4884,8 @@ function x1(l, e, t) {
       Je((te = te.apply(L, X || [])).next());
     });
   };
-  let { filetype: o = null } = e, { dragging: r = !1 } = e, { boundedheight: a = !0 } = e, { center: f = !0 } = e, { flex: c = !0 } = e, { file_count: u = "single" } = e, { disable_click: _ = !1 } = e, { root: d } = e, { hidden: g = !1 } = e, { format: m = "file" } = e, { uploading: b = !1 } = e, { hidden_upload: p = null } = e, { show_progress: w = !0 } = e, { max_file_size: h = null } = e, { upload: v } = e, { stream_handler: y } = e, k, S, C;
-  const E = N1(), q = ["image", "video", "audio", "text", "file"], W = (L) => L.startsWith(".") || L.endsWith("/*") ? L : q.includes(L) ? L + "/*" : "." + L;
+  let { filetype: o = null } = e, { dragging: r = !1 } = e, { boundedheight: a = !0 } = e, { center: f = !0 } = e, { flex: c = !0 } = e, { file_count: u = "single" } = e, { disable_click: _ = !1 } = e, { root: d } = e, { hidden: g = !1 } = e, { format: m = "file" } = e, { uploading: b = !1 } = e, { hidden_upload: p = null } = e, { show_progress: w = !0 } = e, { max_file_size: h = null } = e, { upload: k } = e, { stream_handler: S } = e, C, y, v;
+  const E = N1(), z = ["image", "video", "audio", "text", "file"], W = (L) => L.startsWith(".") || L.endsWith("/*") ? L : z.includes(L) ? L + "/*" : "." + L;
   function A() {
     t(20, r = !r);
   }
@@ -4908,9 +4908,9 @@ function x1(l, e, t) {
   }
   function G(L) {
     return s(this, void 0, void 0, function* () {
-      yield P1(), t(14, k = Math.random().toString(36).substring(2, 15)), t(1, b = !0);
+      yield P1(), t(14, C = Math.random().toString(36).substring(2, 15)), t(1, b = !0);
       try {
-        const X = yield v(L, d, k, h ?? 1 / 0);
+        const X = yield k(L, d, C, h ?? 1 / 0);
         return E("load", u === "single" ? X == null ? void 0 : X[0] : X), t(1, b = !1), X || [];
       } catch (X) {
         return E("error", X.message), t(1, b = !1), [];
@@ -4922,7 +4922,7 @@ function x1(l, e, t) {
       if (!L.length)
         return;
       let X = L.map((Q) => new File([Q], Q instanceof File ? Q.name : "file", { type: Q.type }));
-      return t(15, S = yield yr(X)), yield G(S);
+      return t(15, y = yield yr(X)), yield G(y);
     });
   }
   function ae(L) {
@@ -4946,7 +4946,7 @@ function x1(l, e, t) {
       if (t(20, r = !1), !(!((X = L.dataTransfer) === null || X === void 0) && X.files)) return;
       const Q = Array.from(L.dataTransfer.files).filter((te) => {
         const D = "." + te.name.split(".").pop();
-        return D && Q1(C, D, te.type) || (D && Array.isArray(o) ? o.includes(D) : D === o) ? !0 : (E("error", `Invalid file type only ${o} allowed.`), !1);
+        return D && Q1(v, D, te.type) || (D && Array.isArray(o) ? o.includes(D) : D === o) ? !0 : (E("error", `Invalid file type only ${o} allowed.`), !1);
       });
       yield J(Q);
     });
@@ -4978,10 +4978,10 @@ function x1(l, e, t) {
     });
   }
   return l.$$set = (L) => {
-    "filetype" in L && t(0, o = L.filetype), "dragging" in L && t(20, r = L.dragging), "boundedheight" in L && t(3, a = L.boundedheight), "center" in L && t(4, f = L.center), "flex" in L && t(5, c = L.flex), "file_count" in L && t(6, u = L.file_count), "disable_click" in L && t(7, _ = L.disable_click), "root" in L && t(8, d = L.root), "hidden" in L && t(9, g = L.hidden), "format" in L && t(21, m = L.format), "uploading" in L && t(1, b = L.uploading), "hidden_upload" in L && t(2, p = L.hidden_upload), "show_progress" in L && t(10, w = L.show_progress), "max_file_size" in L && t(22, h = L.max_file_size), "upload" in L && t(23, v = L.upload), "stream_handler" in L && t(11, y = L.stream_handler), "$$scope" in L && t(25, i = L.$$scope);
+    "filetype" in L && t(0, o = L.filetype), "dragging" in L && t(20, r = L.dragging), "boundedheight" in L && t(3, a = L.boundedheight), "center" in L && t(4, f = L.center), "flex" in L && t(5, c = L.flex), "file_count" in L && t(6, u = L.file_count), "disable_click" in L && t(7, _ = L.disable_click), "root" in L && t(8, d = L.root), "hidden" in L && t(9, g = L.hidden), "format" in L && t(21, m = L.format), "uploading" in L && t(1, b = L.uploading), "hidden_upload" in L && t(2, p = L.hidden_upload), "show_progress" in L && t(10, w = L.show_progress), "max_file_size" in L && t(22, h = L.max_file_size), "upload" in L && t(23, k = L.upload), "stream_handler" in L && t(11, S = L.stream_handler), "$$scope" in L && t(25, i = L.$$scope);
   }, l.$$.update = () => {
     l.$$.dirty[0] & /*filetype*/
-    1 && (o == null ? t(16, C = null) : typeof o == "string" ? t(16, C = W(o)) : (t(0, o = o.map(W)), t(16, C = o.join(", "))));
+    1 && (o == null ? t(16, v = null) : typeof o == "string" ? t(16, v = W(o)) : (t(0, o = o.map(W)), t(16, v = o.join(", "))));
   }, [
     o,
     b,
@@ -4994,19 +4994,19 @@ function x1(l, e, t) {
     d,
     g,
     w,
-    y,
+    S,
     U,
     V,
-    k,
-    S,
     C,
+    y,
+    v,
     A,
     ae,
     R,
     r,
     m,
     h,
-    v,
+    k,
     J,
     i,
     n,
@@ -5613,17 +5613,17 @@ function Vh(l, e, t) {
   const p = (R) => n(void 0, void 0, void 0, function* () {
     const M = R.target.value;
     yield Oo(d, i, M).then((j) => n(void 0, void 0, void 0, function* () {
-      k = j, t(7, o = s.find((O) => O.deviceId === M) || null), t(10, A = !1);
+      C = j, t(7, o = s.find((O) => O.deviceId === M) || null), t(10, A = !1);
     }));
   });
   function w() {
     return n(this, void 0, void 0, function* () {
       try {
         Oo(d, i).then((R) => n(this, void 0, void 0, function* () {
-          t(9, q = !0), t(6, s = yield ph()), k = R;
+          t(9, z = !0), t(6, s = yield ph()), C = R;
         })).then(() => kh(s)).then((R) => {
           t(6, s = R);
-          const P = k.getTracks().map((M) => {
+          const P = C.getTracks().map((M) => {
             var j;
             return (j = M.getSettings()) === null || j === void 0 ? void 0 : j.deviceId;
           })[0];
@@ -5639,7 +5639,7 @@ function Vh(l, e, t) {
   }
   function h() {
     var R = r.getContext("2d");
-    (!a || a && v) && i.videoWidth && i.videoHeight && (r.width = i.videoWidth, r.height = i.videoHeight, R.drawImage(i, 0, 0, i.videoWidth, i.videoHeight), _ && (R.scale(-1, 1), R.drawImage(i, -i.videoWidth, 0)), r.toBlob(
+    (!a || a && k) && i.videoWidth && i.videoHeight && (r.width = i.videoWidth, r.height = i.videoHeight, R.drawImage(i, 0, 0, i.videoWidth, i.videoHeight), _ && (R.scale(-1, 1), R.drawImage(i, -i.videoWidth, 0)), r.toBlob(
       (P) => {
         b(a ? "stream" : "capture", P);
       },
@@ -5647,16 +5647,16 @@ function Vh(l, e, t) {
       0.8
     ));
   }
-  let v = !1, y = [], k, S, C;
+  let k = !1, S = [], C, y, v;
   function E() {
-    if (v) {
-      C.stop();
-      let R = new Blob(y, { type: S }), P = new FileReader();
+    if (k) {
+      v.stop();
+      let R = new Blob(S, { type: y }), P = new FileReader();
       P.onload = function(M) {
         return n(this, void 0, void 0, function* () {
           var j;
           if (M.target) {
-            let O = new File([R], "sample." + S.substring(6));
+            let O = new File([R], "sample." + y.substring(6));
             const ie = yield yr([O]);
             let be = ((j = yield m(ie, c)) === null || j === void 0 ? void 0 : j.filter(Boolean))[0];
             b("capture", be), b("stop_recording");
@@ -5664,26 +5664,26 @@ function Vh(l, e, t) {
         });
       }, P.readAsDataURL(R);
     } else {
-      b("start_recording"), y = [];
+      b("start_recording"), S = [];
       let R = ["video/webm", "video/mp4"];
       for (let P of R)
         if (MediaRecorder.isTypeSupported(P)) {
-          S = P;
+          y = P;
           break;
         }
-      if (S === null) {
+      if (y === null) {
         console.error("No supported MediaRecorder mimeType");
         return;
       }
-      C = new MediaRecorder(k, { mimeType: S }), C.addEventListener("dataavailable", function(P) {
-        y.push(P.data);
-      }), C.start(200);
+      v = new MediaRecorder(C, { mimeType: y }), v.addEventListener("dataavailable", function(P) {
+        S.push(P.data);
+      }), v.start(200);
     }
-    t(8, v = !v);
+    t(8, k = !k);
   }
-  let q = !1;
+  let z = !1;
   function W() {
-    u === "image" && a && t(8, v = !v), u === "image" ? h() : E(), !v && k && (k.getTracks().forEach((R) => R.stop()), t(5, i.srcObject = null, i), t(9, q = !1));
+    u === "image" && a && t(8, k = !k), u === "image" ? h() : E(), !k && C && (C.getTracks().forEach((R) => R.stop()), t(5, i.srcObject = null, i), t(9, z = !1));
   }
   a && u === "image" && window.setInterval(
     () => {
@@ -5712,8 +5712,8 @@ function Vh(l, e, t) {
     i,
     s,
     o,
-    v,
-    q,
+    k,
+    z,
     A,
     p,
     w,
@@ -6848,21 +6848,21 @@ function Bm(l) {
 function Dm(l, e, t) {
   var n, i;
   let { choices: s } = e, { filtered_indices: o } = e, { show_options: r = !1 } = e, { disabled: a = !1 } = e, { selected_indices: f = [] } = e, { active_index: c = null } = e, u, _, d, g, m, b, p, w, h;
-  function v() {
+  function k() {
     const { top: A, bottom: U } = m.getBoundingClientRect();
     t(16, u = A), t(17, _ = h - U);
   }
-  let y = null;
-  function k() {
-    r && (y !== null && clearTimeout(y), y = setTimeout(
+  let S = null;
+  function C() {
+    r && (S !== null && clearTimeout(S), S = setTimeout(
       () => {
-        v(), y = null;
+        k(), S = null;
       },
       10
     ));
   }
-  const S = qm();
-  function C() {
+  const y = qm();
+  function v() {
     t(11, h = window.innerHeight);
   }
   function E(A) {
@@ -6870,7 +6870,7 @@ function Dm(l, e, t) {
       m = A, t(6, m);
     });
   }
-  const q = (A) => S("change", A);
+  const z = (A) => y("change", A);
   function W(A) {
     aa[A ? "unshift" : "push"](() => {
       b = A, t(7, b);
@@ -6890,7 +6890,7 @@ function Dm(l, e, t) {
               break;
             }
         }
-        v();
+        k();
         const A = t(15, i = m.parentElement) === null || i === void 0 ? void 0 : i.getBoundingClientRect();
         t(18, d = (A == null ? void 0 : A.height) || 0), t(8, g = (A == null ? void 0 : A.width) || 0);
       }
@@ -6909,16 +6909,16 @@ function Dm(l, e, t) {
     p,
     w,
     h,
-    k,
-    S,
+    C,
+    y,
     n,
     i,
     u,
     _,
     d,
-    C,
+    v,
     E,
-    q,
+    z,
     W
   ];
 }
@@ -7229,58 +7229,58 @@ function Pm(l) {
   };
 }
 function Zm(l, e, t) {
-  let { label: n } = e, { info: i = void 0 } = e, { value: s = [] } = e, o = [], { value_is_output: r = !1 } = e, { choices: a } = e, f, { disabled: c = !1 } = e, { show_label: u } = e, { container: _ = !0 } = e, { allow_custom_value: d = !1 } = e, { filterable: g = !0 } = e, m, b = !1, p, w, h = "", v = "", y = !1, k = [], S = null, C = null, E;
-  const q = Vm();
-  s ? (E = a.map((M) => M[1]).indexOf(s), C = E, C === -1 ? (o = s, C = null) : ([h, o] = a[C], v = h), A()) : a.length > 0 && (E = 0, C = 0, [h, s] = a[C], o = s, v = h);
+  let { label: n } = e, { info: i = void 0 } = e, { value: s = [] } = e, o = [], { value_is_output: r = !1 } = e, { choices: a } = e, f, { disabled: c = !1 } = e, { show_label: u } = e, { container: _ = !0 } = e, { allow_custom_value: d = !1 } = e, { filterable: g = !0 } = e, m, b = !1, p, w, h = "", k = "", S = !1, C = [], y = null, v = null, E;
+  const z = Vm();
+  s ? (E = a.map((M) => M[1]).indexOf(s), v = E, v === -1 ? (o = s, v = null) : ([h, o] = a[v], k = h), A()) : a.length > 0 && (E = 0, v = 0, [h, s] = a[v], o = s, k = h);
   function W() {
     t(13, p = a.map((M) => M[0])), t(24, w = a.map((M) => M[1]));
   }
   function A() {
-    W(), s === void 0 || Array.isArray(s) && s.length === 0 ? (t(9, h = ""), t(11, C = null)) : w.includes(s) ? (t(9, h = p[w.indexOf(s)]), t(11, C = w.indexOf(s))) : d ? (t(9, h = s), t(11, C = null)) : (t(9, h = ""), t(11, C = null)), t(27, E = C);
+    W(), s === void 0 || Array.isArray(s) && s.length === 0 ? (t(9, h = ""), t(11, v = null)) : w.includes(s) ? (t(9, h = p[w.indexOf(s)]), t(11, v = w.indexOf(s))) : d ? (t(9, h = s), t(11, v = null)) : (t(9, h = ""), t(11, v = null)), t(27, E = v);
   }
   function U(M) {
-    if (t(11, C = parseInt(M.detail.target.dataset.index)), isNaN(C)) {
-      t(11, C = null);
+    if (t(11, v = parseInt(M.detail.target.dataset.index)), isNaN(v)) {
+      t(11, v = null);
       return;
     }
-    t(12, b = !1), t(14, S = null), m.blur();
+    t(12, b = !1), t(14, y = null), m.blur();
   }
   function V(M) {
-    t(10, k = a.map((j, O) => O)), t(12, b = !0), q("focus");
+    t(10, C = a.map((j, O) => O)), t(12, b = !0), z("focus");
   }
   function G() {
-    d ? t(20, s = h) : t(9, h = p[w.indexOf(s)]), t(12, b = !1), t(14, S = null), q("blur");
+    d ? t(20, s = h) : t(9, h = p[w.indexOf(s)]), t(12, b = !1), t(14, y = null), z("blur");
   }
   function J(M) {
-    t(12, [b, S] = Rm(M, S, k), b, (t(14, S), t(2, a), t(23, f), t(6, d), t(9, h), t(10, k), t(8, m), t(25, v), t(11, C), t(27, E), t(26, y), t(24, w))), M.key === "Enter" && (S !== null ? (t(11, C = S), t(12, b = !1), m.blur(), t(14, S = null)) : p.includes(h) ? (t(11, C = p.indexOf(h)), t(12, b = !1), t(14, S = null), m.blur()) : d && (t(20, s = h), t(11, C = null), t(12, b = !1), t(14, S = null), m.blur()), q("enter", s));
+    t(12, [b, y] = Rm(M, y, C), b, (t(14, y), t(2, a), t(23, f), t(6, d), t(9, h), t(10, C), t(8, m), t(25, k), t(11, v), t(27, E), t(26, S), t(24, w))), M.key === "Enter" && (y !== null ? (t(11, v = y), t(12, b = !1), m.blur(), t(14, y = null)) : p.includes(h) ? (t(11, v = p.indexOf(h)), t(12, b = !1), t(14, y = null), m.blur()) : d && (t(20, s = h), t(11, v = null), t(12, b = !1), t(14, y = null), m.blur()), z("enter", s));
   }
   Om(() => {
-    t(21, r = !1), t(26, y = !0);
+    t(21, r = !1), t(26, S = !0);
   }), Um(() => {
     m.focus();
   });
   function ae() {
-    h = this.value, t(9, h), t(11, C), t(27, E), t(26, y), t(2, a), t(24, w);
+    h = this.value, t(9, h), t(11, v), t(27, E), t(26, S), t(2, a), t(24, w);
   }
   function R(M) {
     Wm[M ? "unshift" : "push"](() => {
       m = M, t(8, m);
     });
   }
-  const P = (M) => q("key_up", { key: M.key, input_value: h });
+  const P = (M) => z("key_up", { key: M.key, input_value: h });
   return l.$$set = (M) => {
     "label" in M && t(0, n = M.label), "info" in M && t(1, i = M.info), "value" in M && t(20, s = M.value), "value_is_output" in M && t(21, r = M.value_is_output), "choices" in M && t(2, a = M.choices), "disabled" in M && t(3, c = M.disabled), "show_label" in M && t(4, u = M.show_label), "container" in M && t(5, _ = M.container), "allow_custom_value" in M && t(6, d = M.allow_custom_value), "filterable" in M && t(7, g = M.filterable);
   }, l.$$.update = () => {
     l.$$.dirty[0] & /*selected_index, old_selected_index, initialized, choices, choices_values*/
-    218105860 && C !== E && C !== null && y && (t(9, [h, s] = a[C], h, (t(20, s), t(11, C), t(27, E), t(26, y), t(2, a), t(24, w))), t(27, E = C), q("select", {
-      index: C,
-      value: w[C],
+    218105860 && v !== E && v !== null && S && (t(9, [h, s] = a[v], h, (t(20, s), t(11, v), t(27, E), t(26, S), t(2, a), t(24, w))), t(27, E = v), z("select", {
+      index: v,
+      value: w[v],
       selected: !0
     })), l.$$.dirty[0] & /*value, old_value, value_is_output*/
-    7340032 && s != o && (A(), Mm(q, s, r), t(22, o = s)), l.$$.dirty[0] & /*choices*/
+    7340032 && s != o && (A(), Mm(z, s, r), t(22, o = s)), l.$$.dirty[0] & /*choices*/
     4 && W(), l.$$.dirty[0] & /*choices, old_choices, allow_custom_value, input_text, filtered_indices, filter_input*/
-    8390468 && a !== f && (d || A(), t(23, f = a), t(10, k = ha(a, h)), !d && k.length > 0 && t(14, S = k[0]), m == document.activeElement && t(12, b = !0)), l.$$.dirty[0] & /*input_text, old_input_text, choices, allow_custom_value, filtered_indices*/
-    33556036 && h !== v && (t(10, k = ha(a, h)), t(25, v = h), !d && k.length > 0 && t(14, S = k[0]));
+    8390468 && a !== f && (d || A(), t(23, f = a), t(10, C = ha(a, h)), !d && C.length > 0 && t(14, y = C[0]), m == document.activeElement && t(12, b = !0)), l.$$.dirty[0] & /*input_text, old_input_text, choices, allow_custom_value, filtered_indices*/
+    33556036 && h !== k && (t(10, C = ha(a, h)), t(25, k = h), !d && C.length > 0 && t(14, y = C[0]));
   }, [
     n,
     i,
@@ -7292,12 +7292,12 @@ function Zm(l, e, t) {
     g,
     m,
     h,
-    k,
     C,
+    v,
     b,
     p,
-    S,
-    q,
+    y,
+    z,
     U,
     V,
     G,
@@ -7307,8 +7307,8 @@ function Zm(l, e, t) {
     o,
     f,
     w,
-    v,
-    y,
+    k,
+    S,
     E,
     ae,
     R,
@@ -7594,76 +7594,76 @@ function ag(l) {
     c() {
       e = ut("div"), t = ut("div"), n = ut("span"), w && w.c(), i = tl(), s = ut("div"), rn(o.$$.fragment), r = tl(), a = ut("div"), rn(f.$$.fragment), c = tl(), u = ut("div"), rn(_.$$.fragment), d = tl(), h && h.c(), g = tl(), m = ut("div"), rn(b.$$.fragment), Tn(s, "margin-right", "10px"), Tn(a, "margin-right", "40px"), Tn(a, "margin-bottom", "8px"), Tn(u, "margin-right", "8px"), In(n, "class", "model-content svelte-d9x7u0"), In(t, "class", "modal-container svelte-d9x7u0"), In(e, "class", "modal svelte-d9x7u0"), In(e, "id", "model-box-edit");
     },
-    m(v, y) {
-      Zn(v, e, y), Oe(e, t), Oe(t, n), w && w.m(n, null), Oe(n, i), Oe(n, s), cn(o, s, null), Oe(n, r), Oe(n, a), cn(f, a, null), Oe(n, c), Oe(n, u), cn(_, u, null), Oe(n, d), h && h.m(n, null), Oe(n, g), Oe(n, m), cn(b, m, null), p = !0;
+    m(k, S) {
+      Zn(k, e, S), Oe(e, t), Oe(t, n), w && w.m(n, null), Oe(n, i), Oe(n, s), cn(o, s, null), Oe(n, r), Oe(n, a), cn(f, a, null), Oe(n, c), Oe(n, u), cn(_, u, null), Oe(n, d), h && h.m(n, null), Oe(n, g), Oe(n, m), cn(b, m, null), p = !0;
     },
-    p(v, [y]) {
+    p(k, [S]) {
       /*showRemove*/
-      v[4] ? w && (Es(), Ye(w, 1, 1, () => {
+      k[4] ? w && (Es(), Ye(w, 1, 1, () => {
         w = null;
-      }), Ls()) : w ? (w.p(v, y), y & /*showRemove*/
-      16 && ye(w, 1)) : (w = wa(v), w.c(), ye(w, 1), w.m(n, i));
-      const k = {};
-      y & /*currentLabel*/
-      1 && (k.value = /*currentLabel*/
-      v[0]), y & /*choices*/
-      8 && (k.choices = /*choices*/
-      v[3]), o.$set(k);
-      const S = {};
-      y & /*currentColor*/
-      2 && (S.value = /*currentColor*/
-      v[1]), f.$set(S);
+      }), Ls()) : w ? (w.p(k, S), S & /*showRemove*/
+      16 && ye(w, 1)) : (w = wa(k), w.c(), ye(w, 1), w.m(n, i));
       const C = {};
-      y & /*$$scope*/
-      262144 && (C.$$scope = { dirty: y, ctx: v }), _.$set(C), /*showRemove*/
-      v[4] ? h ? (h.p(v, y), y & /*showRemove*/
-      16 && ye(h, 1)) : (h = pa(v), h.c(), ye(h, 1), h.m(n, g)) : h && (Es(), Ye(h, 1, 1, () => {
+      S & /*currentLabel*/
+      1 && (C.value = /*currentLabel*/
+      k[0]), S & /*choices*/
+      8 && (C.choices = /*choices*/
+      k[3]), o.$set(C);
+      const y = {};
+      S & /*currentColor*/
+      2 && (y.value = /*currentColor*/
+      k[1]), f.$set(y);
+      const v = {};
+      S & /*$$scope*/
+      262144 && (v.$$scope = { dirty: S, ctx: k }), _.$set(v), /*showRemove*/
+      k[4] ? h ? (h.p(k, S), S & /*showRemove*/
+      16 && ye(h, 1)) : (h = pa(k), h.c(), ye(h, 1), h.m(n, g)) : h && (Es(), Ye(h, 1, 1, () => {
         h = null;
       }), Ls());
       const E = {};
-      y & /*$$scope*/
-      262144 && (E.$$scope = { dirty: y, ctx: v }), b.$set(E);
+      S & /*$$scope*/
+      262144 && (E.$$scope = { dirty: S, ctx: k }), b.$set(E);
     },
-    i(v) {
-      p || (ye(w), ye(o.$$.fragment, v), ye(f.$$.fragment, v), ye(_.$$.fragment, v), ye(h), ye(b.$$.fragment, v), p = !0);
+    i(k) {
+      p || (ye(w), ye(o.$$.fragment, k), ye(f.$$.fragment, k), ye(_.$$.fragment, k), ye(h), ye(b.$$.fragment, k), p = !0);
     },
-    o(v) {
-      Ye(w), Ye(o.$$.fragment, v), Ye(f.$$.fragment, v), Ye(_.$$.fragment, v), Ye(h), Ye(b.$$.fragment, v), p = !1;
+    o(k) {
+      Ye(w), Ye(o.$$.fragment, k), Ye(f.$$.fragment, k), Ye(_.$$.fragment, k), Ye(h), Ye(b.$$.fragment, k), p = !1;
     },
-    d(v) {
-      v && Pn(e), w && w.d(), fn(o), fn(f), fn(_), h && h.d(), fn(b);
+    d(k) {
+      k && Pn(e), w && w.d(), fn(o), fn(f), fn(_), h && h.d(), fn(b);
     }
   };
 }
 function rg(l, e, t) {
   let { label: n = "" } = e, { currentLabel: i = "" } = e, { choices: s = [] } = e, { choicesColors: o = [] } = e, { color: r = "" } = e, { currentColor: a = "" } = e, { showRemove: f = !0 } = e, { labelDetailLock: c = !1 } = e;
   const u = $m();
-  function _(y) {
+  function _(S) {
     u("change", {
       label: i,
       color: a,
       lock: c,
-      ret: y
+      ret: S
       // -1: remove, 0: cancel, 1: change
     });
   }
-  function d(y) {
-    const { detail: k } = y;
-    let S = k;
-    Number.isInteger(S) ? (Array.isArray(o) && S < o.length && t(1, a = o[S]), Array.isArray(s) && S < s.length && t(0, i = s[S][0])) : t(0, i = S);
+  function d(S) {
+    const { detail: C } = S;
+    let y = C;
+    Number.isInteger(y) ? (Array.isArray(o) && y < o.length && t(1, a = o[y]), Array.isArray(s) && y < s.length && t(0, i = s[y][0])) : t(0, i = y);
   }
-  function g(y) {
-    const { detail: k } = y;
-    t(1, a = k);
+  function g(S) {
+    const { detail: C } = S;
+    t(1, a = C);
   }
-  function m(y) {
-    d(y), _(1);
+  function m(S) {
+    d(S), _(1);
   }
-  function b(y) {
+  function b(S) {
     t(2, c = !c);
   }
-  function p(y) {
-    switch (y.key) {
+  function p(S) {
+    switch (S.key) {
       case "Enter":
         _(1);
         break;
@@ -7674,9 +7674,9 @@ function rg(l, e, t) {
   }), tg(() => {
     document.removeEventListener("keydown", p);
   });
-  const w = () => _(0), h = () => _(-1), v = () => _(1);
-  return l.$$set = (y) => {
-    "label" in y && t(10, n = y.label), "currentLabel" in y && t(0, i = y.currentLabel), "choices" in y && t(3, s = y.choices), "choicesColors" in y && t(11, o = y.choicesColors), "color" in y && t(12, r = y.color), "currentColor" in y && t(1, a = y.currentColor), "showRemove" in y && t(4, f = y.showRemove), "labelDetailLock" in y && t(2, c = y.labelDetailLock);
+  const w = () => _(0), h = () => _(-1), k = () => _(1);
+  return l.$$set = (S) => {
+    "label" in S && t(10, n = S.label), "currentLabel" in S && t(0, i = S.currentLabel), "choices" in S && t(3, s = S.choices), "choicesColors" in S && t(11, o = S.choicesColors), "color" in S && t(12, r = S.color), "currentColor" in S && t(1, a = S.currentColor), "showRemove" in S && t(4, f = S.showRemove), "labelDetailLock" in S && t(2, c = S.labelDetailLock);
   }, [
     i,
     a,
@@ -7693,7 +7693,7 @@ function rg(l, e, t) {
     r,
     w,
     h,
-    v
+    k
   ];
 }
 class Us extends Km {
@@ -7721,70 +7721,76 @@ function as(l, e) {
   return `rgba(${n}, ${i}, ${s}, ${e})`;
 }
 class rs {
-  constructor(e, t, n, i, s, o, r, a, f, c, u, _, d = "rgb(255, 255, 255)", g = 0.5, m = 25, b = 8, p = 2, w = 4, h = 1) {
+  // Assuming text is optional
+  constructor(e, t, n, i, s, o, r, a, f, c, u, _, d = "rgb(255, 255, 255)", g = 0.5, m = 25, b = 8, p = 2, w = 4, h = 1, k, S) {
     this.stopDrag = () => {
       this.isDragging = !1, document.removeEventListener("pointermove", this.handleDrag), document.removeEventListener("pointerup", this.stopDrag);
-    }, this.handleDrag = (v) => {
+    }, this.handleDrag = (C) => {
       if (this.isDragging) {
-        let y = (v.clientX - this.offsetMouseX) / this.canvasWindow.scale - this._xmin, k = (v.clientY - this.offsetMouseY) / this.canvasWindow.scale - this._ymin;
-        const S = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, C = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
-        y = he(y, -this._xmin, S - this._xmax), k = he(k, -this._ymin, C - this._ymax), this._xmin += y, this._ymin += k, this._xmax += y, this._ymax += k, this.applyUserScale(), this.renderCallBack();
+        let y = (C.clientX - this.offsetMouseX) / this.canvasWindow.scale - this._xmin, v = (C.clientY - this.offsetMouseY) / this.canvasWindow.scale - this._ymin;
+        const E = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, z = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
+        y = he(y, -this._xmin, E - this._xmax), v = he(v, -this._ymin, z - this._ymax), this._xmin += y, this._ymin += v, this._xmax += y, this._ymax += v, this.applyUserScale(), this.renderCallBack();
       }
-    }, this.handleCreating = (v) => {
+    }, this.handleCreating = (C) => {
       if (this.isCreating) {
-        let [y, k] = this.toBoxCoordinates(v.clientX, v.clientY);
-        y = (y - this.offsetMouseX) / this.canvasWindow.scale, k = (k - this.offsetMouseY) / this.canvasWindow.scale, y > this._xmax ? (this.creatingAnchorX == "xmax" && (this._xmin = this._xmax), this._xmax = y, this.creatingAnchorX = "xmin") : y > this._xmin && y < this._xmax && this.creatingAnchorX == "xmin" ? this._xmax = y : y > this._xmin && y < this._xmax && this.creatingAnchorX == "xmax" ? this._xmin = y : y < this._xmin && (this.creatingAnchorX == "xmin" && (this._xmax = this._xmin), this._xmin = y, this.creatingAnchorX = "xmax"), k > this._ymax ? (this.creatingAnchorY == "ymax" && (this._ymin = this._ymax), this._ymax = k, this.creatingAnchorY = "ymin") : k > this._ymin && k < this._ymax && this.creatingAnchorY == "ymin" ? this._ymax = k : k > this._ymin && k < this._ymax && this.creatingAnchorY == "ymax" ? this._ymin = k : k < this._ymin && (this.creatingAnchorY == "ymin" && (this._ymax = this._ymin), this._ymin = k, this.creatingAnchorY = "ymax"), this.applyUserScale(), this.renderCallBack();
+        let [y, v] = this.toBoxCoordinates(C.clientX, C.clientY);
+        y = (y - this.offsetMouseX) / this.canvasWindow.scale, v = (v - this.offsetMouseY) / this.canvasWindow.scale, y > this._xmax ? (this.creatingAnchorX == "xmax" && (this._xmin = this._xmax), this._xmax = y, this.creatingAnchorX = "xmin") : y > this._xmin && y < this._xmax && this.creatingAnchorX == "xmin" ? this._xmax = y : y > this._xmin && y < this._xmax && this.creatingAnchorX == "xmax" ? this._xmin = y : y < this._xmin && (this.creatingAnchorX == "xmin" && (this._xmax = this._xmin), this._xmin = y, this.creatingAnchorX = "xmax"), v > this._ymax ? (this.creatingAnchorY == "ymax" && (this._ymin = this._ymax), this._ymax = v, this.creatingAnchorY = "ymin") : v > this._ymin && v < this._ymax && this.creatingAnchorY == "ymin" ? this._ymax = v : v > this._ymin && v < this._ymax && this.creatingAnchorY == "ymax" ? this._ymin = v : v < this._ymin && (this.creatingAnchorY == "ymin" && (this._ymax = this._ymin), this._ymin = v, this.creatingAnchorY = "ymax"), this.applyUserScale(), this.renderCallBack();
       }
-    }, this.stopCreating = (v) => {
+    }, this.stopCreating = (C) => {
       if (this.isCreating = !1, document.removeEventListener("pointermove", this.handleCreating), document.removeEventListener("pointerup", this.stopCreating), this.getArea() > 0) {
-        const y = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, k = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
-        this._xmin = he(this._xmin, 0, y - this.minSize), this._ymin = he(this._ymin, 0, k - this.minSize), this._xmax = he(this._xmax, this.minSize, y), this._ymax = he(this._ymax, this.minSize, k), this.minSize > 0 && (this.getWidth() / this.canvasWindow.scale < this.minSize && (this.creatingAnchorX == "xmin" ? this._xmax = this._xmin + this.minSize : this._xmin = this._xmax - this.minSize), this.getHeight() / this.canvasWindow.scale < this.minSize && (this.creatingAnchorY == "ymin" ? this._ymax = this._ymin + this.minSize : this._ymin = this._ymax - this.minSize), this._xmax > y ? (this._xmin -= this._xmax - y, this._xmax = y) : this._xmin < 0 && (this._xmax -= this._xmin, this._xmin = 0), this._ymax > k ? (this._ymin -= this._ymax - k, this._ymax = k) : this._ymin < 0 && (this._ymax -= this._ymin, this._ymin = 0)), this.applyUserScale(), this.renderCallBack();
+        const y = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, v = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
+        this._xmin = he(this._xmin, 0, y - this.minSize), this._ymin = he(this._ymin, 0, v - this.minSize), this._xmax = he(this._xmax, this.minSize, y), this._ymax = he(this._ymax, this.minSize, v), this.minSize > 0 && (this.getWidth() / this.canvasWindow.scale < this.minSize && (this.creatingAnchorX == "xmin" ? this._xmax = this._xmin + this.minSize : this._xmin = this._xmax - this.minSize), this.getHeight() / this.canvasWindow.scale < this.minSize && (this.creatingAnchorY == "ymin" ? this._ymax = this._ymin + this.minSize : this._ymin = this._ymax - this.minSize), this._xmax > y ? (this._xmin -= this._xmax - y, this._xmax = y) : this._xmin < 0 && (this._xmax -= this._xmin, this._xmin = 0), this._ymax > v ? (this._ymin -= this._ymax - v, this._ymax = v) : this._ymin < 0 && (this._ymax -= this._ymin, this._ymin = 0)), this.applyUserScale(), this.renderCallBack();
       }
       this.onFinishCreation();
-    }, this.handleResize = (v) => {
+    }, this.handleResize = (C) => {
       if (this.isResizing) {
-        const y = v.clientX, k = v.clientY, S = (y - this.offsetMouseX - this.resizeHandles[this.resizingHandleIndex].xmin) / this.canvasWindow.scale, C = (k - this.offsetMouseY - this.resizeHandles[this.resizingHandleIndex].ymin) / this.canvasWindow.scale, E = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, q = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
+        const y = C.clientX, v = C.clientY, E = (y - this.offsetMouseX - this.resizeHandles[this.resizingHandleIndex].xmin) / this.canvasWindow.scale, z = (v - this.offsetMouseY - this.resizeHandles[this.resizingHandleIndex].ymin) / this.canvasWindow.scale, W = (this.canvasXmax - this.canvasXmin) / this.canvasWindow.scale, A = (this.canvasYmax - this.canvasYmin) / this.canvasWindow.scale;
         switch (this.resizingHandleIndex) {
           case 0:
-            this._xmin += S, this._ymin += C, this._xmin = he(this._xmin, 0, this._xmax - this.minSize), this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
+            this._xmin += E, this._ymin += z, this._xmin = he(this._xmin, 0, this._xmax - this.minSize), this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
             break;
           case 1:
-            this._xmax += S, this._ymin += C, this._xmax = he(this._xmax, this._xmin + this.minSize, E), this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
+            this._xmax += E, this._ymin += z, this._xmax = he(this._xmax, this._xmin + this.minSize, W), this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
             break;
           case 2:
-            this._xmax += S, this._ymax += C, this._xmax = he(this._xmax, this._xmin + this.minSize, E), this._ymax = he(this._ymax, this._ymin + this.minSize, q);
+            this._xmax += E, this._ymax += z, this._xmax = he(this._xmax, this._xmin + this.minSize, W), this._ymax = he(this._ymax, this._ymin + this.minSize, A);
             break;
           case 3:
-            this._xmin += S, this._ymax += C, this._xmin = he(this._xmin, 0, this._xmax - this.minSize), this._ymax = he(this._ymax, this._ymin + this.minSize, q);
+            this._xmin += E, this._ymax += z, this._xmin = he(this._xmin, 0, this._xmax - this.minSize), this._ymax = he(this._ymax, this._ymin + this.minSize, A);
             break;
           case 4:
-            this._ymin += C, this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
+            this._ymin += z, this._ymin = he(this._ymin, 0, this._ymax - this.minSize);
             break;
           case 5:
-            this._xmax += S, this._xmax = he(this._xmax, this._xmin + this.minSize, E);
+            this._xmax += E, this._xmax = he(this._xmax, this._xmin + this.minSize, W);
             break;
           case 6:
-            this._ymax += C, this._ymax = he(this._ymax, this._ymin + this.minSize, q);
+            this._ymax += z, this._ymax = he(this._ymax, this._ymin + this.minSize, A);
             break;
           case 7:
-            this._xmin += S, this._xmin = he(this._xmin, 0, this._xmax - this.minSize);
+            this._xmin += E, this._xmin = he(this._xmin, 0, this._xmax - this.minSize);
             break;
         }
         this.applyUserScale(), this.renderCallBack();
       }
     }, this.stopResize = () => {
       this.isResizing = !1, document.removeEventListener("pointermove", this.handleResize), document.removeEventListener("pointerup", this.stopResize);
-    }, this.renderCallBack = e, this.onFinishCreation = t, this.canvasWindow = n, this.canvasXmin = i, this.canvasYmin = s, this.canvasXmax = o, this.canvasYmax = r, this.scaleFactor = h, this.label = a, this.isDragging = !1, this.isCreating = !1, this._xmin = f, this._ymin = c, this._xmax = u, this._ymax = _, this.xmin = this._xmin * this.canvasWindow.scale, this.ymin = this._ymin * this.canvasWindow.scale, this.xmax = this._xmax * this.canvasWindow.scale, this.ymax = this._ymax * this.canvasWindow.scale, this.isResizing = !1, this.isSelected = !1, this.offsetMouseX = 0, this.offsetMouseY = 0, this.resizeHandleSize = b, this.thickness = p, this.selectedThickness = w, this.updateHandles(), this.resizingHandleIndex = -1, this.minSize = m, this.color = d, this.alpha = g, this.creatingAnchorX = "xmin", this.creatingAnchorY = "ymin";
+    }, this.renderCallBack = e, this.onFinishCreation = t, this.canvasWindow = n, this.canvasXmin = i, this.canvasYmin = s, this.canvasXmax = o, this.canvasYmax = r, this.scaleFactor = h, this.label = a, this.isDragging = !1, this.isCreating = !1, this._xmin = f, this._ymin = c, this._xmax = u, this._ymax = _, this.xmin = this._xmin * this.canvasWindow.scale, this.ymin = this._ymin * this.canvasWindow.scale, this.xmax = this._xmax * this.canvasWindow.scale, this.ymax = this._ymax * this.canvasWindow.scale, this.isResizing = !1, this.isSelected = !1, this.offsetMouseX = 0, this.offsetMouseY = 0, this.resizeHandleSize = b, this.thickness = p, this.selectedThickness = w, this.updateHandles(), this.resizingHandleIndex = -1, this.minSize = m, this.color = d, this.alpha = g, this.creatingAnchorX = "xmin", this.creatingAnchorY = "ymin", this.id = k, this.text = S;
   }
   toJSON() {
     return {
       label: this.label,
       xmin: this._xmin,
+      // Use original image coordinates
       ymin: this._ymin,
       xmax: this._xmax,
       ymax: this._ymax,
       color: this.color,
-      scaleFactor: this.scaleFactor
+      scaleFactor: this.scaleFactor,
+      // Keep scaleFactor as it's part of the data structure
+      // ADDED: Include id and text in the JSON output
+      id: this.id,
+      text: this.text
     };
   }
   setSelected(e) {
@@ -8022,8 +8028,8 @@ function va(l) {
         l[7].drag
       ), ve(c, "class", "icon svelte-3rql59"), ve(c, "aria-label", "Rotate counterclockwise"), ve(d, "class", "icon svelte-3rql59"), ve(d, "aria-label", "Rotate clockwise"), ve(e, "class", "canvas-control svelte-3rql59");
     },
-    m(v, y) {
-      yt(v, e, y), ct(e, t), Bt(n, t, null), ct(e, i), ct(e, s), Bt(o, s, null), ct(e, r), w && w.m(e, null), ct(e, a), h && h.m(e, null), ct(e, f), ct(e, c), Bt(u, c, null), ct(e, _), ct(e, d), Bt(g, d, null), m = !0, b || (p = [
+    m(k, S) {
+      yt(k, e, S), ct(e, t), Bt(n, t, null), ct(e, i), ct(e, s), Bt(o, s, null), ct(e, r), w && w.m(e, null), ct(e, a), h && h.m(e, null), ct(e, f), ct(e, c), Bt(u, c, null), ct(e, _), ct(e, d), Bt(g, d, null), m = !0, b || (p = [
         Fe(
           t,
           "click",
@@ -8050,40 +8056,40 @@ function va(l) {
         )
       ], b = !0);
     },
-    p(v, y) {
-      (!m || y[0] & /*mode, Mode*/
+    p(k, S) {
+      (!m || S[0] & /*mode, Mode*/
       1152) && Xl(
         t,
         "selected",
         /*mode*/
-        v[10] === /*Mode*/
-        v[7].creation
-      ), (!m || y[0] & /*mode, Mode*/
+        k[10] === /*Mode*/
+        k[7].creation
+      ), (!m || S[0] & /*mode, Mode*/
       1152) && Xl(
         s,
         "selected",
         /*mode*/
-        v[10] === /*Mode*/
-        v[7].drag
+        k[10] === /*Mode*/
+        k[7].drag
       ), /*showRemoveButton*/
-      v[1] ? w ? (w.p(v, y), y[0] & /*showRemoveButton*/
-      2 && $(w, 1)) : (w = ka(v), w.c(), $(w, 1), w.m(e, a)) : w && (Xn(), oe(w, 1, 1, () => {
+      k[1] ? w ? (w.p(k, S), S[0] & /*showRemoveButton*/
+      2 && $(w, 1)) : (w = ka(k), w.c(), $(w, 1), w.m(e, a)) : w && (Xn(), oe(w, 1, 1, () => {
         w = null;
       }), Hn()), !/*disableEditBoxes*/
-      v[5] && /*labelDetailLock*/
-      v[14] ? h ? (h.p(v, y), y[0] & /*disableEditBoxes, labelDetailLock*/
-      16416 && $(h, 1)) : (h = ya(v), h.c(), $(h, 1), h.m(e, f)) : h && (Xn(), oe(h, 1, 1, () => {
+      k[5] && /*labelDetailLock*/
+      k[14] ? h ? (h.p(k, S), S[0] & /*disableEditBoxes, labelDetailLock*/
+      16416 && $(h, 1)) : (h = ya(k), h.c(), $(h, 1), h.m(e, f)) : h && (Xn(), oe(h, 1, 1, () => {
         h = null;
       }), Hn());
     },
-    i(v) {
-      m || ($(n.$$.fragment, v), $(o.$$.fragment, v), $(w), $(h), $(u.$$.fragment, v), $(g.$$.fragment, v), m = !0);
+    i(k) {
+      m || ($(n.$$.fragment, k), $(o.$$.fragment, k), $(w), $(h), $(u.$$.fragment, k), $(g.$$.fragment, k), m = !0);
     },
-    o(v) {
-      oe(n.$$.fragment, v), oe(o.$$.fragment, v), oe(w), oe(h), oe(u.$$.fragment, v), oe(g.$$.fragment, v), m = !1;
+    o(k) {
+      oe(n.$$.fragment, k), oe(o.$$.fragment, k), oe(w), oe(h), oe(u.$$.fragment, k), oe(g.$$.fragment, k), m = !1;
     },
-    d(v) {
-      v && kt(e), qt(n), qt(o), w && w.d(), h && h.d(), qt(u), qt(g), b = !1, Pr(p);
+    d(k) {
+      k && kt(e), qt(n), qt(o), w && w.d(), h && h.d(), qt(u), qt(g), b = !1, Pr(p);
     }
   };
 }
@@ -8537,70 +8543,70 @@ function gn(l) {
 }
 function vg(l, e, t) {
   var n;
-  (function(z) {
-    z[z.creation = 0] = "creation", z[z.drag = 1] = "drag";
+  (function(q) {
+    q[q.creation = 0] = "creation", q[q.drag = 1] = "drag";
   })(n || (n = {}));
   let { imageUrl: i = null } = e, { interactive: s } = e, { boxAlpha: o = 0.5 } = e, { boxMinSize: r = 10 } = e, { handleSize: a } = e, { boxThickness: f } = e, { boxSelectedThickness: c } = e, { value: u } = e, { choices: _ = [] } = e, { choicesColors: d = [] } = e, { disableEditBoxes: g = !1 } = e, { singleBox: m = !1 } = e, { showRemoveButton: b = null } = e, { handlesCursor: p = !0 } = e, { useDefaultLabel: w = !1 } = e;
   b === null && (b = g);
-  let h, v, y = null, k = -1, S = n.drag, C = new fg(O);
-  u !== null && u.boxes.length == 0 && (S = n.creation);
-  let E = 0, q = 0, W = 0, A = 0, U = 1, V = 0, G = 0, J = !1, ae = !1, R = !1, P = w, M = { label: "", color: "" };
+  let h, k, S = null, C = -1, y = n.drag, v = new fg(O);
+  u !== null && u.boxes.length == 0 && (y = n.creation);
+  let E = 0, z = 0, W = 0, A = 0, U = 1, V = 0, G = 0, J = !1, ae = !1, R = !1, P = w, M = { label: "", color: "" };
   const j = wg();
   function O() {
-    if (v) {
-      if (v.clearRect(0, 0, h.width, h.height), v.save(), v.translate(C.offsetX, C.offsetY), v.scale(C.scale, C.scale), y !== null) {
+    if (k) {
+      if (k.clearRect(0, 0, h.width, h.height), k.save(), k.translate(v.offsetX, v.offsetY), k.scale(v.scale, v.scale), S !== null) {
         switch (u.orientation) {
           case 0:
-            v.drawImage(y, 0, 0, V, G);
+            k.drawImage(S, 0, 0, V, G);
             break;
           case 1:
-            v.translate(V, 0), v.rotate(Math.PI / 2), v.drawImage(y, 0, 0, G, V);
+            k.translate(V, 0), k.rotate(Math.PI / 2), k.drawImage(S, 0, 0, G, V);
             break;
           case 2:
-            v.translate(V, G), v.rotate(Math.PI), v.drawImage(y, 0, 0, V, G);
+            k.translate(V, G), k.rotate(Math.PI), k.drawImage(S, 0, 0, V, G);
             break;
           case 3:
-            v.translate(0, G), v.rotate(-Math.PI / 2), v.drawImage(y, 0, 0, G, V);
+            k.translate(0, G), k.rotate(-Math.PI / 2), k.drawImage(S, 0, 0, G, V);
             break;
         }
-        v.restore();
+        k.restore();
       }
-      for (const z of u.boxes.slice().reverse())
-        z.render(v);
+      for (const q of u.boxes.slice().reverse())
+        q.render(k);
     }
   }
-  function ie(z) {
-    t(9, k = z), u.boxes.forEach((H) => {
+  function ie(q) {
+    t(9, C = q), u.boxes.forEach((H) => {
       H.setSelected(!1);
-    }), z >= 0 && z < u.boxes.length && u.boxes[z].setSelected(!0), O();
+    }), q >= 0 && q < u.boxes.length && u.boxes[q].setSelected(!0), O();
   }
-  function be(z) {
-    s && (z.target instanceof Element && z.target.hasPointerCapture(z.pointerId) && z.target.releasePointerCapture(z.pointerId), S === n.creation ? te(z) : S === n.drag && I(z));
+  function be(q) {
+    s && (q.target instanceof Element && q.target.hasPointerCapture(q.pointerId) && q.target.releasePointerCapture(q.pointerId), y === n.creation ? te(q) : y === n.drag && I(q));
   }
-  function I(z) {
-    const H = h.getBoundingClientRect(), x = z.clientX - H.left, se = z.clientY - H.top;
+  function I(q) {
+    const H = h.getBoundingClientRect(), x = q.clientX - H.left, se = q.clientY - H.top;
     let re = !1;
     for (const [fe, Ce] of u.boxes.entries()) {
       const vl = Ce.indexOfPointInsideHandle(x, se);
       if (vl >= 0) {
-        re = !0, ie(fe), Ce.startResize(vl, z);
+        re = !0, ie(fe), Ce.startResize(vl, q);
         return;
       }
     }
     for (const [fe, Ce] of u.boxes.entries())
       if (Ce.isPointInsideBox(x, se)) {
-        re = !0, ie(fe), Ce.startDrag(z);
+        re = !0, ie(fe), Ce.startDrag(q);
         return;
       }
-    m || ie(-1), re || C.startDrag(z);
+    m || ie(-1), re || v.startDrag(q);
   }
-  function Ge(z) {
+  function Ge(q) {
     j("change");
   }
-  function L(z) {
-    if (u === null || S !== n.drag)
+  function L(q) {
+    if (u === null || y !== n.drag)
       return;
-    const H = h.getBoundingClientRect(), x = z.clientX - H.left, se = z.clientY - H.top;
+    const H = h.getBoundingClientRect(), x = q.clientX - H.left, se = q.clientY - H.top;
     for (const [re, fe] of u.boxes.entries()) {
       const Ce = fe.indexOfPointInsideHandle(x, se);
       if (Ce >= 0) {
@@ -8610,124 +8616,124 @@ function vg(l, e, t) {
     }
     t(8, h.style.cursor = "default", h);
   }
-  function X(z) {
+  function X(q) {
     if (s)
-      switch (z.key) {
+      switch (q.key) {
         case "Delete":
           B();
           break;
       }
   }
-  function Q(z) {
-    z.preventDefault();
-    const H = 1 / (1 + z.deltaY / 1e3 * 0.5), x = parseFloat((C.scale * H).toFixed(2)), se = x < 1 ? 1 : x, re = h.getBoundingClientRect(), fe = z.clientX - re.left, Ce = z.clientY - re.top, vl = (fe - C.offsetX) / C.scale, sf = (Ce - C.offsetY) / C.scale;
-    C.offsetX = fe - vl * se, C.offsetY = Ce - sf * se, C.scale = se, O();
+  function Q(q) {
+    q.preventDefault();
+    const H = 1 / (1 + q.deltaY / 1e3 * 0.5), x = parseFloat((v.scale * H).toFixed(2)), se = x < 1 ? 1 : x, re = h.getBoundingClientRect(), fe = q.clientX - re.left, Ce = q.clientY - re.top, vl = (fe - v.offsetX) / v.scale, sf = (Ce - v.offsetY) / v.scale;
+    v.offsetX = fe - vl * se, v.offsetY = Ce - sf * se, v.scale = se, O();
   }
-  function te(z) {
-    const H = h.getBoundingClientRect(), x = (z.clientX - H.left - C.offsetX) / U / C.scale, se = (z.clientY - H.top - C.offsetY) / U / C.scale;
+  function te(q) {
+    const H = h.getBoundingClientRect(), x = (q.clientX - H.left - v.offsetX) / U / v.scale, se = (q.clientY - H.top - v.offsetY) / U / v.scale;
     let re;
     d.length > 0 ? re = Yl(d[0]) : m ? u.boxes.length > 0 ? re = u.boxes[0].color : re = $t[0] : re = $t[u.boxes.length % $t.length];
-    let fe = new rs(O, Ke, C, E, q, W, A, "", x, se, x, se, re, o, r, a, f, c);
-    fe.startCreating(z, H.left, H.top), m ? t(0, u.boxes = [fe], u) : t(0, u.boxes = [fe, ...u.boxes], u), ie(0), O(), j("change");
+    let fe = new rs(O, Ke, v, E, z, W, A, "", x, se, x, se, re, o, r, a, f, c);
+    fe.startCreating(q, H.left, H.top), m ? t(0, u.boxes = [fe], u) : t(0, u.boxes = [fe, ...u.boxes], u), ie(0), O(), j("change");
   }
   function D() {
-    t(10, S = n.creation), t(8, h.style.cursor = "crosshair", h);
+    t(10, y = n.creation), t(8, h.style.cursor = "crosshair", h);
   }
   function Re() {
-    t(10, S = n.drag), t(8, h.style.cursor = "default", h);
+    t(10, y = n.drag), t(8, h.style.cursor = "default", h);
   }
   function Ke() {
-    k >= 0 && k < u.boxes.length && (u.boxes[k].getArea() < 1 ? B() : (g || (P ? bi() : t(12, ae = !0)), m && Re()));
+    C >= 0 && C < u.boxes.length && (u.boxes[C].getArea() < 1 ? B() : (g || (P ? bi() : t(12, ae = !0)), m && Re()));
   }
   function mt() {
-    k >= 0 && k < u.boxes.length && !g && t(11, J = !0);
+    C >= 0 && C < u.boxes.length && !g && t(11, J = !0);
   }
-  function Ae(z) {
+  function Ae(q) {
     s && mt();
   }
-  function Je(z) {
+  function Je(q) {
     t(11, J = !1);
-    const { detail: H } = z;
+    const { detail: H } = q;
     let x = H.label, se = H.color, re = H.ret;
-    if (k >= 0 && k < u.boxes.length) {
-      let fe = u.boxes[k];
+    if (C >= 0 && C < u.boxes.length) {
+      let fe = u.boxes[C];
       re == 1 ? (fe.label = x, fe.color = Yl(se), O(), j("change")) : re == -1 && B();
     }
   }
-  function Qe(z) {
+  function Qe(q) {
     t(12, ae = !1);
-    const { detail: H } = z;
+    const { detail: H } = q;
     let x = H.label, se = H.color, re = H.ret, fe = H.lock;
-    if (k >= 0 && k < u.boxes.length) {
-      let Ce = u.boxes[k];
+    if (C >= 0 && C < u.boxes.length) {
+      let Ce = u.boxes[C];
       re == 1 ? (t(14, P = fe), M.label = x, M.color = se, Ce.label = x, Ce.color = Yl(se), O(), j("change")) : B();
     }
   }
-  function Gt(z) {
+  function Gt(q) {
     t(13, R = !1);
-    const { detail: H } = z;
+    const { detail: H } = q;
     let x = H.label, se = H.color, re = H.ret, fe = H.lock;
     re == 1 && (t(14, P = fe), M.label = x, M.color = se);
   }
   function bi() {
-    if (k >= 0 && k < u.boxes.length) {
-      let z = u.boxes[k];
-      z.label = M.label, M.color !== "" && (z.color = Yl(M.color)), O(), j("change");
+    if (C >= 0 && C < u.boxes.length) {
+      let q = u.boxes[C];
+      q.label = M.label, M.color !== "" && (q.color = Yl(M.color)), O(), j("change");
     }
   }
   function B() {
-    k >= 0 && k < u.boxes.length && (u.boxes.splice(k, 1), ie(-1), m && D(), j("change"));
+    C >= 0 && C < u.boxes.length && (u.boxes.splice(C, 1), ie(-1), m && D(), j("change"));
   }
-  function ot(z) {
-    t(0, u.orientation = ((u.orientation + z) % 4 + 4) % 4, u), C.orientation = u.orientation, We();
+  function ot(q) {
+    t(0, u.orientation = ((u.orientation + q) % 4 + 4) % 4, u), v.orientation = u.orientation, We();
     for (const H of u.boxes)
-      H.onRotate(z);
+      H.onRotate(q);
     O();
   }
   function We() {
     if (h) {
-      if (U = 1, t(8, h.width = h.clientWidth, h), C.setRotatedImage(y), y !== null) {
-        if (C.imageRotatedWidth > h.width)
-          U = h.width / C.imageRotatedWidth, V = Math.round(C.imageRotatedWidth * U), G = Math.round(C.imageRotatedHeight * U), E = 0, q = 0, W = V, A = G, t(8, h.height = G, h);
+      if (U = 1, t(8, h.width = h.clientWidth, h), v.setRotatedImage(S), S !== null) {
+        if (v.imageRotatedWidth > h.width)
+          U = h.width / v.imageRotatedWidth, V = Math.round(v.imageRotatedWidth * U), G = Math.round(v.imageRotatedHeight * U), E = 0, z = 0, W = V, A = G, t(8, h.height = G, h);
         else {
-          V = C.imageRotatedWidth, G = C.imageRotatedHeight;
-          var z = (h.width - V) / 2;
-          E = z, q = 0, W = z + V, A = G, t(8, h.height = G, h);
+          V = v.imageRotatedWidth, G = v.imageRotatedHeight;
+          var q = (h.width - V) / 2;
+          E = q, z = 0, W = q + V, A = G, t(8, h.height = G, h);
         }
-        C.imageWidth = V, C.imageHeight = G;
+        v.imageWidth = V, v.imageHeight = G;
       } else
-        E = 0, q = 0, W = h.width, A = h.height, t(8, h.height = h.clientHeight, h);
-      if (C.resize(h.width, h.height, E, q), W > 0 && A > 0)
+        E = 0, z = 0, W = h.width, A = h.height, t(8, h.height = h.clientHeight, h);
+      if (v.resize(h.width, h.height, E, z), W > 0 && A > 0)
         for (const H of u.boxes)
-          H.canvasXmin = E, H.canvasYmin = q, H.canvasXmax = W, H.canvasYmax = A, H.setScaleFactor(U);
+          H.canvasXmin = E, H.canvasYmin = z, H.canvasXmax = W, H.canvasYmax = A, H.setScaleFactor(U);
       O(), j("change");
     }
   }
   const vn = new ResizeObserver(We);
   function wi() {
-    for (let z = 0; z < u.boxes.length; z++) {
-      let H = u.boxes[z];
+    for (let q = 0; q < u.boxes.length; q++) {
+      let H = u.boxes[q];
       if (!(H instanceof rs)) {
         let x = "", se = "";
-        H.hasOwnProperty("color") ? (x = H.color, Array.isArray(x) && x.length === 3 && (x = `rgb(${x[0]}, ${x[1]}, ${x[2]})`)) : x = $t[z % $t.length], H.hasOwnProperty("label") && (se = H.label), H = new rs(O, Ke, C, E, q, W, A, se, H.xmin, H.ymin, H.xmax, H.ymax, x, o, r, a, f, c), t(0, u.boxes[z] = H, u);
+        H.hasOwnProperty("color") ? (x = H.color, Array.isArray(x) && x.length === 3 && (x = `rgb(${x[0]}, ${x[1]}, ${x[2]})`)) : x = $t[q % $t.length], H.hasOwnProperty("label") && (se = H.label), H = new rs(O, Ke, v, E, z, W, A, se, H.xmin, H.ymin, H.xmax, H.ymax, x, o, r, a, f, c), t(0, u.boxes[q] = H, u);
       }
     }
   }
   function Wt() {
-    i !== null && (y === null || y.src != i) && (y = new Image(), y.src = i, y.onload = function() {
+    i !== null && (S === null || S.src != i) && (S = new Image(), S.src = i, S.onload = function() {
       We(), O();
     });
   }
   gg(() => {
     if (Array.isArray(_) && _.length > 0) {
       if (!Array.isArray(d) || d.length == 0)
-        for (let z = 0; z < _.length; z++) {
-          let H = $t[z % $t.length];
+        for (let q = 0; q < _.length; q++) {
+          let H = $t[q % $t.length];
           d.push(gn(H));
         }
       M.label = _[0][0], M.color = d[0];
     }
-    v = h.getContext("2d"), vn.observe(h), k < 0 && u !== null && u.boxes.length > 0 && ie(0), Wt(), We(), O();
+    k = h.getContext("2d"), vn.observe(h), C < 0 && u !== null && u.boxes.length > 0 && ie(0), Wt(), We(), O();
   });
   function kn() {
     document.addEventListener("keydown", X);
@@ -8738,23 +8744,23 @@ function vg(l, e, t) {
   bg(() => {
     document.removeEventListener("keydown", X);
   });
-  function vi(z) {
-    ug[z ? "unshift" : "push"](() => {
-      h = z, t(8, h);
+  function vi(q) {
+    ug[q ? "unshift" : "push"](() => {
+      h = q, t(8, h);
     });
   }
   const Gn = () => D(), gt = () => Re(), Kn = () => B(), xr = () => t(13, R = !0), $r = () => ot(-1), ef = () => ot(1);
-  function tf(z) {
-    fs.call(this, l, z);
+  function tf(q) {
+    fs.call(this, l, q);
   }
-  function nf(z) {
-    fs.call(this, l, z);
+  function nf(q) {
+    fs.call(this, l, q);
   }
-  function lf(z) {
-    fs.call(this, l, z);
+  function lf(q) {
+    fs.call(this, l, q);
   }
-  return l.$$set = (z) => {
-    "imageUrl" in z && t(29, i = z.imageUrl), "interactive" in z && t(2, s = z.interactive), "boxAlpha" in z && t(30, o = z.boxAlpha), "boxMinSize" in z && t(31, r = z.boxMinSize), "handleSize" in z && t(32, a = z.handleSize), "boxThickness" in z && t(33, f = z.boxThickness), "boxSelectedThickness" in z && t(34, c = z.boxSelectedThickness), "value" in z && t(0, u = z.value), "choices" in z && t(3, _ = z.choices), "choicesColors" in z && t(4, d = z.choicesColors), "disableEditBoxes" in z && t(5, g = z.disableEditBoxes), "singleBox" in z && t(35, m = z.singleBox), "showRemoveButton" in z && t(1, b = z.showRemoveButton), "handlesCursor" in z && t(6, p = z.handlesCursor), "useDefaultLabel" in z && t(36, w = z.useDefaultLabel);
+  return l.$$set = (q) => {
+    "imageUrl" in q && t(29, i = q.imageUrl), "interactive" in q && t(2, s = q.interactive), "boxAlpha" in q && t(30, o = q.boxAlpha), "boxMinSize" in q && t(31, r = q.boxMinSize), "handleSize" in q && t(32, a = q.handleSize), "boxThickness" in q && t(33, f = q.boxThickness), "boxSelectedThickness" in q && t(34, c = q.boxSelectedThickness), "value" in q && t(0, u = q.value), "choices" in q && t(3, _ = q.choices), "choicesColors" in q && t(4, d = q.choicesColors), "disableEditBoxes" in q && t(5, g = q.disableEditBoxes), "singleBox" in q && t(35, m = q.singleBox), "showRemoveButton" in q && t(1, b = q.showRemoveButton), "handlesCursor" in q && t(6, p = q.handlesCursor), "useDefaultLabel" in q && t(36, w = q.useDefaultLabel);
   }, l.$$.update = () => {
     l.$$.dirty[0] & /*value*/
     1 && (Wt(), wi(), We(), O());
@@ -8768,8 +8774,8 @@ function vg(l, e, t) {
     p,
     n,
     h,
-    k,
-    S,
+    C,
+    y,
     J,
     ae,
     R,
@@ -8976,20 +8982,20 @@ function Wg(l) {
 }
 function Ig(l, e, t) {
   let { src: n = void 0 } = e, { interactive: i } = e, { boxesAlpha: s } = e, { labelList: o } = e, { labelColors: r } = e, { boxMinSize: a } = e, { handleSize: f } = e, { boxThickness: c } = e, { boxSelectedThickness: u } = e, { value: _ } = e, { disableEditBoxes: d } = e, { singleBox: g } = e, { showRemoveButton: m } = e, { handlesCursor: b } = e, { useDefaultLabel: p } = e, w, h;
-  const v = Ag();
-  function y(S) {
-    _ = S, t(0, _);
+  const k = Ag();
+  function S(y) {
+    _ = y, t(0, _);
   }
-  const k = () => v("change");
-  return l.$$set = (S) => {
-    "src" in S && t(16, n = S.src), "interactive" in S && t(1, i = S.interactive), "boxesAlpha" in S && t(2, s = S.boxesAlpha), "labelList" in S && t(3, o = S.labelList), "labelColors" in S && t(4, r = S.labelColors), "boxMinSize" in S && t(5, a = S.boxMinSize), "handleSize" in S && t(6, f = S.handleSize), "boxThickness" in S && t(7, c = S.boxThickness), "boxSelectedThickness" in S && t(8, u = S.boxSelectedThickness), "value" in S && t(0, _ = S.value), "disableEditBoxes" in S && t(9, d = S.disableEditBoxes), "singleBox" in S && t(10, g = S.singleBox), "showRemoveButton" in S && t(11, m = S.showRemoveButton), "handlesCursor" in S && t(12, b = S.handlesCursor), "useDefaultLabel" in S && t(13, p = S.useDefaultLabel);
+  const C = () => k("change");
+  return l.$$set = (y) => {
+    "src" in y && t(16, n = y.src), "interactive" in y && t(1, i = y.interactive), "boxesAlpha" in y && t(2, s = y.boxesAlpha), "labelList" in y && t(3, o = y.labelList), "labelColors" in y && t(4, r = y.labelColors), "boxMinSize" in y && t(5, a = y.boxMinSize), "handleSize" in y && t(6, f = y.handleSize), "boxThickness" in y && t(7, c = y.boxThickness), "boxSelectedThickness" in y && t(8, u = y.boxSelectedThickness), "value" in y && t(0, _ = y.value), "disableEditBoxes" in y && t(9, d = y.disableEditBoxes), "singleBox" in y && t(10, g = y.singleBox), "showRemoveButton" in y && t(11, m = y.showRemoveButton), "handlesCursor" in y && t(12, b = y.handlesCursor), "useDefaultLabel" in y && t(13, p = y.useDefaultLabel);
   }, l.$$.update = () => {
     if (l.$$.dirty & /*src, latest_src*/
     196608) {
       t(14, w = n), t(17, h = n);
-      const S = n;
-      a1(S).then((C) => {
-        h === S && t(14, w = C);
+      const y = n;
+      a1(y).then((v) => {
+        h === y && t(14, w = v);
       });
     }
   }, [
@@ -9008,11 +9014,11 @@ function Ig(l, e, t) {
     b,
     p,
     w,
-    v,
+    k,
     n,
     h,
-    y,
-    k
+    S,
+    C
   ];
 }
 class Tg extends yg {
@@ -9591,13 +9597,13 @@ function Jg(l) {
     l[1] !== null && /*interactive*/
     l[7] && Ea(l)
   );
-  function v(q) {
-    l[40](q);
+  function k(z) {
+    l[40](z);
   }
-  function y(q) {
-    l[41](q);
+  function S(z) {
+    l[41](z);
   }
-  let k = {
+  let C = {
     hidden: (
       /*value*/
       l[1] !== null || /*active_source*/
@@ -9629,10 +9635,10 @@ function Jg(l) {
     $$scope: { ctx: l }
   };
   /*uploading*/
-  l[27] !== void 0 && (k.uploading = /*uploading*/
+  l[27] !== void 0 && (C.uploading = /*uploading*/
   l[27]), /*dragging*/
-  l[28] !== void 0 && (k.dragging = /*dragging*/
-  l[28]), f = new $1({ props: k }), l[39](f), gl.push(() => oi(f, "uploading", v)), gl.push(() => oi(f, "dragging", y)), f.$on(
+  l[28] !== void 0 && (C.dragging = /*dragging*/
+  l[28]), f = new $1({ props: C }), l[39](f), gl.push(() => oi(f, "uploading", k)), gl.push(() => oi(f, "dragging", S)), f.$on(
     "load",
     /*handle_upload*/
     l[30]
@@ -9641,93 +9647,93 @@ function Jg(l) {
     /*error_handler_1*/
     l[42]
   );
-  let S = (
+  let y = (
     /*value*/
     l[1] === null && /*active_source*/
     l[0] === "webcam" && Ra(l)
-  ), C = (
+  ), v = (
     /*value*/
     l[1] !== null && Aa(l)
   ), E = m && Wa(l);
   return {
     c() {
-      Lt(e.$$.fragment), t = en(), n = hl("div"), p && p.c(), i = en(), w && w.c(), s = en(), h && h.c(), o = en(), r = hl("div"), a = hl("div"), Lt(f.$$.fragment), _ = en(), S && S.c(), d = en(), C && C.c(), g = en(), E && E.c(), fl(n, "class", "icon-buttons svelte-1gjdske"), fl(a, "class", "upload-container svelte-1gjdske"), fl(r, "data-testid", "image"), fl(r, "class", "image-container svelte-1gjdske");
+      Lt(e.$$.fragment), t = en(), n = hl("div"), p && p.c(), i = en(), w && w.c(), s = en(), h && h.c(), o = en(), r = hl("div"), a = hl("div"), Lt(f.$$.fragment), _ = en(), y && y.c(), d = en(), v && v.c(), g = en(), E && E.c(), fl(n, "class", "icon-buttons svelte-1gjdske"), fl(a, "class", "upload-container svelte-1gjdske"), fl(r, "data-testid", "image"), fl(r, "class", "image-container svelte-1gjdske");
     },
-    m(q, W) {
-      Mt(e, q, W), _n(q, t, W), _n(q, n, W), p && p.m(n, null), Ln(n, i), w && w.m(n, null), Ln(n, s), h && h.m(n, null), _n(q, o, W), _n(q, r, W), Ln(r, a), Mt(f, a, null), Ln(a, _), S && S.m(a, null), Ln(a, d), C && C.m(a, null), Ln(r, g), E && E.m(r, null), b = !0;
+    m(z, W) {
+      Mt(e, z, W), _n(z, t, W), _n(z, n, W), p && p.m(n, null), Ln(n, i), w && w.m(n, null), Ln(n, s), h && h.m(n, null), _n(z, o, W), _n(z, r, W), Ln(r, a), Mt(f, a, null), Ln(a, _), y && y.m(a, null), Ln(a, d), v && v.m(a, null), Ln(r, g), E && E.m(r, null), b = !0;
     },
-    p(q, W) {
+    p(z, W) {
       const A = {};
       W[0] & /*show_label*/
       8 && (A.show_label = /*show_label*/
-      q[3]), W[0] & /*label*/
+      z[3]), W[0] & /*label*/
       4 && (A.label = /*label*/
-      q[2] || "Image Annotator"), e.$set(A), /*showDownloadButton*/
-      q[10] && /*value*/
-      q[1] !== null ? p ? (p.p(q, W), W[0] & /*showDownloadButton, value*/
-      1026 && K(p, 1)) : (p = Da(q), p.c(), K(p, 1), p.m(n, i)) : p && (nn(), ee(p, 1, 1, () => {
+      z[2] || "Image Annotator"), e.$set(A), /*showDownloadButton*/
+      z[10] && /*value*/
+      z[1] !== null ? p ? (p.p(z, W), W[0] & /*showDownloadButton, value*/
+      1026 && K(p, 1)) : (p = Da(z), p.c(), K(p, 1), p.m(n, i)) : p && (nn(), ee(p, 1, 1, () => {
         p = null;
       }), tn()), /*showShareButton*/
-      q[9] && /*value*/
-      q[1] !== null ? w ? (w.p(q, W), W[0] & /*showShareButton, value*/
-      514 && K(w, 1)) : (w = La(q), w.c(), K(w, 1), w.m(n, s)) : w && (nn(), ee(w, 1, 1, () => {
+      z[9] && /*value*/
+      z[1] !== null ? w ? (w.p(z, W), W[0] & /*showShareButton, value*/
+      514 && K(w, 1)) : (w = La(z), w.c(), K(w, 1), w.m(n, s)) : w && (nn(), ee(w, 1, 1, () => {
         w = null;
       }), tn()), /*showClearButton*/
-      q[11] && /*value*/
-      q[1] !== null && /*interactive*/
-      q[7] ? h ? (h.p(q, W), W[0] & /*showClearButton, value, interactive*/
-      2178 && K(h, 1)) : (h = Ea(q), h.c(), K(h, 1), h.m(n, null)) : h && (nn(), ee(h, 1, 1, () => {
+      z[11] && /*value*/
+      z[1] !== null && /*interactive*/
+      z[7] ? h ? (h.p(z, W), W[0] & /*showClearButton, value, interactive*/
+      2178 && K(h, 1)) : (h = Ea(z), h.c(), K(h, 1), h.m(n, null)) : h && (nn(), ee(h, 1, 1, () => {
         h = null;
       }), tn());
       const U = {};
       W[0] & /*value, active_source*/
       3 && (U.hidden = /*value*/
-      q[1] !== null || /*active_source*/
-      q[0] === "webcam"), W[0] & /*active_source*/
+      z[1] !== null || /*active_source*/
+      z[0] === "webcam"), W[0] & /*active_source*/
       1 && (U.filetype = /*active_source*/
-      q[0] === "clipboard" ? "clipboard" : "image/*"), W[0] & /*root*/
+      z[0] === "clipboard" ? "clipboard" : "image/*"), W[0] & /*root*/
       64 && (U.root = /*root*/
-      q[6]), W[0] & /*max_file_size*/
+      z[6]), W[0] & /*max_file_size*/
       8388608 && (U.max_file_size = /*max_file_size*/
-      q[23]), W[0] & /*sources*/
+      z[23]), W[0] & /*sources*/
       16 && (U.disable_click = !/*sources*/
-      q[4].includes("upload")), W[0] & /*cli_upload*/
+      z[4].includes("upload")), W[0] & /*cli_upload*/
       16777216 && (U.upload = /*cli_upload*/
-      q[24]), W[0] & /*stream_handler*/
+      z[24]), W[0] & /*stream_handler*/
       33554432 && (U.stream_handler = /*stream_handler*/
-      q[25]), W[0] & /*value*/
+      z[25]), W[0] & /*value*/
       2 | W[1] & /*$$scope*/
-      1048576 && (U.$$scope = { dirty: W, ctx: q }), !c && W[0] & /*uploading*/
+      1048576 && (U.$$scope = { dirty: W, ctx: z }), !c && W[0] & /*uploading*/
       134217728 && (c = !0, U.uploading = /*uploading*/
-      q[27], si(() => c = !1)), !u && W[0] & /*dragging*/
+      z[27], si(() => c = !1)), !u && W[0] & /*dragging*/
       268435456 && (u = !0, U.dragging = /*dragging*/
-      q[28], si(() => u = !1)), f.$set(U), /*value*/
-      q[1] === null && /*active_source*/
-      q[0] === "webcam" ? S ? (S.p(q, W), W[0] & /*value, active_source*/
-      3 && K(S, 1)) : (S = Ra(q), S.c(), K(S, 1), S.m(a, d)) : S && (nn(), ee(S, 1, 1, () => {
-        S = null;
+      z[28], si(() => u = !1)), f.$set(U), /*value*/
+      z[1] === null && /*active_source*/
+      z[0] === "webcam" ? y ? (y.p(z, W), W[0] & /*value, active_source*/
+      3 && K(y, 1)) : (y = Ra(z), y.c(), K(y, 1), y.m(a, d)) : y && (nn(), ee(y, 1, 1, () => {
+        y = null;
       }), tn()), /*value*/
-      q[1] !== null ? C ? (C.p(q, W), W[0] & /*value*/
-      2 && K(C, 1)) : (C = Aa(q), C.c(), K(C, 1), C.m(a, null)) : C && (nn(), ee(C, 1, 1, () => {
-        C = null;
+      z[1] !== null ? v ? (v.p(z, W), W[0] & /*value*/
+      2 && K(v, 1)) : (v = Aa(z), v.c(), K(v, 1), v.m(a, null)) : v && (nn(), ee(v, 1, 1, () => {
+        v = null;
       }), tn()), W[0] & /*sources, value, interactive*/
       146 && (m = /*sources*/
-      (q[4].length > 1 || /*sources*/
-      q[4].includes("clipboard")) && /*value*/
-      q[1] === null && /*interactive*/
-      q[7]), m ? E ? (E.p(q, W), W[0] & /*sources, value, interactive*/
-      146 && K(E, 1)) : (E = Wa(q), E.c(), K(E, 1), E.m(r, null)) : E && (nn(), ee(E, 1, 1, () => {
+      (z[4].length > 1 || /*sources*/
+      z[4].includes("clipboard")) && /*value*/
+      z[1] === null && /*interactive*/
+      z[7]), m ? E ? (E.p(z, W), W[0] & /*sources, value, interactive*/
+      146 && K(E, 1)) : (E = Wa(z), E.c(), K(E, 1), E.m(r, null)) : E && (nn(), ee(E, 1, 1, () => {
         E = null;
       }), tn());
     },
-    i(q) {
-      b || (K(e.$$.fragment, q), K(p), K(w), K(h), K(f.$$.fragment, q), K(S), K(C), K(E), b = !0);
+    i(z) {
+      b || (K(e.$$.fragment, z), K(p), K(w), K(h), K(f.$$.fragment, z), K(y), K(v), K(E), b = !0);
     },
-    o(q) {
-      ee(e.$$.fragment, q), ee(p), ee(w), ee(h), ee(f.$$.fragment, q), ee(S), ee(C), ee(E), b = !1;
+    o(z) {
+      ee(e.$$.fragment, z), ee(p), ee(w), ee(h), ee(f.$$.fragment, z), ee(y), ee(v), ee(E), b = !1;
     },
-    d(q) {
-      q && (un(t), un(n), un(o), un(r)), Et(e, q), p && p.d(), w && w.d(), h && h.d(), l[39](null), Et(f), S && S.d(), C && C.d(), E && E.d();
+    d(z) {
+      z && (un(t), un(n), un(o), un(r)), Et(e, z), p && p.d(), w && w.d(), h && h.d(), l[39](null), Et(f), y && y.d(), v && v.d(), E && E.d();
     }
   };
 }
@@ -9760,7 +9766,7 @@ function Qg(l, e, t) {
       Gn((vn = vn.apply(B, ot || [])).next());
     });
   };
-  let { value: o } = e, { label: r = void 0 } = e, { show_label: a } = e, { sources: f = ["upload", "webcam", "clipboard"] } = e, { selectable: c = !1 } = e, { root: u } = e, { interactive: _ } = e, { i18n: d } = e, { showShareButton: g } = e, { showDownloadButton: m } = e, { showClearButton: b } = e, { boxesAlpha: p } = e, { labelList: w } = e, { labelColors: h } = e, { boxMinSize: v } = e, { handleSize: y } = e, { boxThickness: k } = e, { disableEditBoxes: S } = e, { singleBox: C } = e, { showRemoveButton: E } = e, { handlesCursor: q } = e, { boxSelectedThickness: W } = e, { max_file_size: A = null } = e, { cli_upload: U } = e, { stream_handler: V } = e, { useDefaultLabel: G } = e, J, ae = !1, { active_source: R = null } = e;
+  let { value: o } = e, { label: r = void 0 } = e, { show_label: a } = e, { sources: f = ["upload", "webcam", "clipboard"] } = e, { selectable: c = !1 } = e, { root: u } = e, { interactive: _ } = e, { i18n: d } = e, { showShareButton: g } = e, { showDownloadButton: m } = e, { showClearButton: b } = e, { boxesAlpha: p } = e, { labelList: w } = e, { labelColors: h } = e, { boxMinSize: k } = e, { handleSize: S } = e, { boxThickness: C } = e, { disableEditBoxes: y } = e, { singleBox: v } = e, { showRemoveButton: E } = e, { handlesCursor: z } = e, { boxSelectedThickness: W } = e, { max_file_size: A = null } = e, { cli_upload: U } = e, { stream_handler: V } = e, { useDefaultLabel: G } = e, J, ae = !1, { active_source: R = null } = e;
   function P({ detail: B }) {
     t(1, o = new qa()), t(1, o.image = B, o), j("upload");
   }
@@ -9821,7 +9827,7 @@ function Qg(l, e, t) {
     R = B, t(0, R), t(4, f);
   }
   return l.$$set = (B) => {
-    "value" in B && t(1, o = B.value), "label" in B && t(2, r = B.label), "show_label" in B && t(3, a = B.show_label), "sources" in B && t(4, f = B.sources), "selectable" in B && t(5, c = B.selectable), "root" in B && t(6, u = B.root), "interactive" in B && t(7, _ = B.interactive), "i18n" in B && t(8, d = B.i18n), "showShareButton" in B && t(9, g = B.showShareButton), "showDownloadButton" in B && t(10, m = B.showDownloadButton), "showClearButton" in B && t(11, b = B.showClearButton), "boxesAlpha" in B && t(12, p = B.boxesAlpha), "labelList" in B && t(13, w = B.labelList), "labelColors" in B && t(14, h = B.labelColors), "boxMinSize" in B && t(15, v = B.boxMinSize), "handleSize" in B && t(16, y = B.handleSize), "boxThickness" in B && t(17, k = B.boxThickness), "disableEditBoxes" in B && t(18, S = B.disableEditBoxes), "singleBox" in B && t(19, C = B.singleBox), "showRemoveButton" in B && t(20, E = B.showRemoveButton), "handlesCursor" in B && t(21, q = B.handlesCursor), "boxSelectedThickness" in B && t(22, W = B.boxSelectedThickness), "max_file_size" in B && t(23, A = B.max_file_size), "cli_upload" in B && t(24, U = B.cli_upload), "stream_handler" in B && t(25, V = B.stream_handler), "useDefaultLabel" in B && t(26, G = B.useDefaultLabel), "active_source" in B && t(0, R = B.active_source), "$$scope" in B && t(51, i = B.$$scope);
+    "value" in B && t(1, o = B.value), "label" in B && t(2, r = B.label), "show_label" in B && t(3, a = B.show_label), "sources" in B && t(4, f = B.sources), "selectable" in B && t(5, c = B.selectable), "root" in B && t(6, u = B.root), "interactive" in B && t(7, _ = B.interactive), "i18n" in B && t(8, d = B.i18n), "showShareButton" in B && t(9, g = B.showShareButton), "showDownloadButton" in B && t(10, m = B.showDownloadButton), "showClearButton" in B && t(11, b = B.showClearButton), "boxesAlpha" in B && t(12, p = B.boxesAlpha), "labelList" in B && t(13, w = B.labelList), "labelColors" in B && t(14, h = B.labelColors), "boxMinSize" in B && t(15, k = B.boxMinSize), "handleSize" in B && t(16, S = B.handleSize), "boxThickness" in B && t(17, C = B.boxThickness), "disableEditBoxes" in B && t(18, y = B.disableEditBoxes), "singleBox" in B && t(19, v = B.singleBox), "showRemoveButton" in B && t(20, E = B.showRemoveButton), "handlesCursor" in B && t(21, z = B.handlesCursor), "boxSelectedThickness" in B && t(22, W = B.boxSelectedThickness), "max_file_size" in B && t(23, A = B.max_file_size), "cli_upload" in B && t(24, U = B.cli_upload), "stream_handler" in B && t(25, V = B.stream_handler), "useDefaultLabel" in B && t(26, G = B.useDefaultLabel), "active_source" in B && t(0, R = B.active_source), "$$scope" in B && t(51, i = B.$$scope);
   }, l.$$.update = () => {
     l.$$.dirty[0] & /*uploading*/
     134217728 && ae && be(), l.$$.dirty[0] & /*dragging*/
@@ -9843,13 +9849,13 @@ function Qg(l, e, t) {
     p,
     w,
     h,
-    v,
-    y,
     k,
     S,
     C,
+    y,
+    v,
     E,
-    q,
+    z,
     W,
     A,
     U,
@@ -10570,7 +10576,7 @@ function v2(l) {
   };
 }
 function k2(l, e, t) {
-  let { elem_id: n = "" } = e, { elem_classes: i = [] } = e, { visible: s = !0 } = e, { value: o = null } = e, { label: r } = e, { show_label: a } = e, { root: f } = e, { height: c } = e, { width: u } = e, { _selectable: _ = !1 } = e, { container: d = !0 } = e, { scale: g = null } = e, { min_width: m = void 0 } = e, { loading_status: b } = e, { sources: p = ["upload", "webcam", "clipboard"] } = e, { show_download_button: w } = e, { show_share_button: h } = e, { show_clear_button: v } = e, { interactive: y } = e, { boxes_alpha: k } = e, { label_list: S } = e, { label_colors: C } = e, { box_min_size: E } = e, { handle_size: q } = e, { box_thickness: W } = e, { box_selected_thickness: A } = e, { disable_edit_boxes: U } = e, { single_box: V } = e, { show_remove_button: G } = e, { handles_cursor: J } = e, { use_default_label: ae } = e, { gradio: R } = e, P, M = null;
+  let { elem_id: n = "" } = e, { elem_classes: i = [] } = e, { visible: s = !0 } = e, { value: o = null } = e, { label: r } = e, { show_label: a } = e, { root: f } = e, { height: c } = e, { width: u } = e, { _selectable: _ = !1 } = e, { container: d = !0 } = e, { scale: g = null } = e, { min_width: m = void 0 } = e, { loading_status: b } = e, { sources: p = ["upload", "webcam", "clipboard"] } = e, { show_download_button: w } = e, { show_share_button: h } = e, { show_clear_button: k } = e, { interactive: S } = e, { boxes_alpha: C } = e, { label_list: y } = e, { label_colors: v } = e, { box_min_size: E } = e, { handle_size: z } = e, { box_thickness: W } = e, { box_selected_thickness: A } = e, { disable_edit_boxes: U } = e, { single_box: V } = e, { show_remove_button: G } = e, { handles_cursor: J } = e, { use_default_label: ae } = e, { gradio: R } = e, P, M = null;
   function j(D) {
     M = D, t(33, M);
   }
@@ -10583,7 +10589,7 @@ function k2(l, e, t) {
     t(1, b = b || {}), t(1, b.status = "error", b), R.dispatch("error", D);
   };
   return l.$$set = (D) => {
-    "elem_id" in D && t(2, n = D.elem_id), "elem_classes" in D && t(3, i = D.elem_classes), "visible" in D && t(4, s = D.visible), "value" in D && t(0, o = D.value), "label" in D && t(5, r = D.label), "show_label" in D && t(6, a = D.show_label), "root" in D && t(7, f = D.root), "height" in D && t(8, c = D.height), "width" in D && t(9, u = D.width), "_selectable" in D && t(10, _ = D._selectable), "container" in D && t(11, d = D.container), "scale" in D && t(12, g = D.scale), "min_width" in D && t(13, m = D.min_width), "loading_status" in D && t(1, b = D.loading_status), "sources" in D && t(14, p = D.sources), "show_download_button" in D && t(15, w = D.show_download_button), "show_share_button" in D && t(16, h = D.show_share_button), "show_clear_button" in D && t(17, v = D.show_clear_button), "interactive" in D && t(18, y = D.interactive), "boxes_alpha" in D && t(19, k = D.boxes_alpha), "label_list" in D && t(20, S = D.label_list), "label_colors" in D && t(21, C = D.label_colors), "box_min_size" in D && t(22, E = D.box_min_size), "handle_size" in D && t(23, q = D.handle_size), "box_thickness" in D && t(24, W = D.box_thickness), "box_selected_thickness" in D && t(25, A = D.box_selected_thickness), "disable_edit_boxes" in D && t(26, U = D.disable_edit_boxes), "single_box" in D && t(27, V = D.single_box), "show_remove_button" in D && t(28, G = D.show_remove_button), "handles_cursor" in D && t(29, J = D.handles_cursor), "use_default_label" in D && t(30, ae = D.use_default_label), "gradio" in D && t(31, R = D.gradio);
+    "elem_id" in D && t(2, n = D.elem_id), "elem_classes" in D && t(3, i = D.elem_classes), "visible" in D && t(4, s = D.visible), "value" in D && t(0, o = D.value), "label" in D && t(5, r = D.label), "show_label" in D && t(6, a = D.show_label), "root" in D && t(7, f = D.root), "height" in D && t(8, c = D.height), "width" in D && t(9, u = D.width), "_selectable" in D && t(10, _ = D._selectable), "container" in D && t(11, d = D.container), "scale" in D && t(12, g = D.scale), "min_width" in D && t(13, m = D.min_width), "loading_status" in D && t(1, b = D.loading_status), "sources" in D && t(14, p = D.sources), "show_download_button" in D && t(15, w = D.show_download_button), "show_share_button" in D && t(16, h = D.show_share_button), "show_clear_button" in D && t(17, k = D.show_clear_button), "interactive" in D && t(18, S = D.interactive), "boxes_alpha" in D && t(19, C = D.boxes_alpha), "label_list" in D && t(20, y = D.label_list), "label_colors" in D && t(21, v = D.label_colors), "box_min_size" in D && t(22, E = D.box_min_size), "handle_size" in D && t(23, z = D.handle_size), "box_thickness" in D && t(24, W = D.box_thickness), "box_selected_thickness" in D && t(25, A = D.box_selected_thickness), "disable_edit_boxes" in D && t(26, U = D.disable_edit_boxes), "single_box" in D && t(27, V = D.single_box), "show_remove_button" in D && t(28, G = D.show_remove_button), "handles_cursor" in D && t(29, J = D.handles_cursor), "use_default_label" in D && t(30, ae = D.use_default_label), "gradio" in D && t(31, R = D.gradio);
   }, [
     o,
     b,
@@ -10602,13 +10608,13 @@ function k2(l, e, t) {
     p,
     w,
     h,
-    v,
-    y,
     k,
     S,
     C,
+    y,
+    v,
     E,
-    q,
+    z,
     W,
     A,
     U,
