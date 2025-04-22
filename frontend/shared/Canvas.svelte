@@ -248,48 +248,62 @@
 		const x = (event.clientX - rect.left - canvasWindow.offsetX) / scaleFactor / canvasWindow.scale;
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / scaleFactor / canvasWindow.scale;
 		let color;
-		if (choicesColors.length > 0) {
-			color = colorHexToRGB(choicesColors[0]);
-		} else if (singleBox) {
-			if (value.boxes.length > 0) {
-				color = value.boxes[0].color;
-			} else {
-				color = Colors[0];
-			}
-		} else {
-			color = Colors[value.boxes.length % Colors.length];
-		}
-		
-		let box = new Box(
-			draw,
-			onBoxFinishCreation,
-			canvasWindow,
-			canvasXmin,
-			canvasYmin,
-			canvasXmax,
-			canvasYmax,
-			"",
-			x,
-			y,
-			x,
-			y,
-			color,
-			boxAlpha,
-			boxMinSize,
-			handleSize,
-			boxThickness,
-			boxSelectedThickness
-		);
-		box.startCreating(event, rect.left, rect.top);
-		if (singleBox) {
-			value.boxes = [box];
-		} else {
-			value.boxes = [box, ...value.boxes];
-		}
-		selectBox(0);
-		draw();
-		dispatch("change");
-	}
+        if (choicesColors.length > 0) {
+            color = colorHexToRGB(choicesColors[0]);
+        } else if (singleBox) {
+            if (value.boxes.length > 0) {
+                color = value.boxes[0].color;
+            } else {
+                color = Colors[0];
+            }
+        } else {
+            color = Colors[value.boxes.length % Colors.length];
+        }
+
+        // ADDED: Assign a unique ID
+        // and default text for a newly created box
+        // For simplicity, let's use a timestamp+random for demo, real-world might need a UUID lib
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let newBoxId = '';
+        for (let i = 0; i < 12; i++) {
+            newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        const newBoxText = ""; // Default text is empty
+
+        let box = new Box(
+            draw,
+            onBoxFinishCreation,
+            canvasWindow,
+            canvasXmin,
+            canvasYmin,
+            canvasXmax,
+            canvasYmax,
+            "", // Initial label (might be set later via modal)
+            x,
+            y,
+            x,
+            y,
+            color,
+            boxAlpha,
+            boxMinSize,
+            handleSize,
+            boxThickness,
+            boxSelectedThickness,
+            // ADDED: Pass id and text to the Box constructor
+            newBoxId,
+            newBoxText
+        );
+        box.startCreating(event, rect.left, rect.top);
+        if (singleBox) {
+            value.boxes = [box];
+        } else {
+            // Add the new box to the beginning of the array (so it's drawn on top and easily selected)
+             value.boxes = [box, ...value.boxes];
+        }
+        selectBox(0); // Select the newly created box
+        draw();
+        dispatch("change"); // Trigger change event to send the new box data to backend
+    }
 
 	function setCreateMode() {
 		mode = Mode.creation;
@@ -490,6 +504,8 @@
 			if (!(box instanceof Box)) {
 				let color = "";
 				let label = "";
+				let id = undefined; // Will be undefined if not present in backend data
+                let text = undefined; // Will be undefined if not present in backend data
 				if (box.hasOwnProperty("color")) {
 					color = box["color"];
 					if (Array.isArray(color) && color.length === 3) {
@@ -500,6 +516,13 @@
 				}
 				if (box.hasOwnProperty("label")) {
 					label = box["label"];
+				}
+				// ADDED: Extract id and text from the incoming dictionary
+				if (box.hasOwnProperty("id")) {
+					id = box["id"];
+				}
+				if (box.hasOwnProperty("text")) {
+					text = box["text"];
 				}
 				box = new Box(
 					draw,
@@ -519,7 +542,9 @@
 					boxMinSize,
 					handleSize,
 					boxThickness,
-					boxSelectedThickness
+					boxSelectedThickness,
+					id, // ADDED: Pass id
+					text // ADDED: Pass text
 				);
 				value.boxes[i] = box;
 			}
