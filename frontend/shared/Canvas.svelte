@@ -129,6 +129,7 @@
 	}
 
 	function handlePointerDown(event: PointerEvent) {
+		console.log("handlePointerDown called. Current mode:", mode); // ADD THIS LOG
 		if (!interactive) {
 			return;
 		}
@@ -247,49 +248,67 @@
 		const rect = canvas.getBoundingClientRect();
 		const x = (event.clientX - rect.left - canvasWindow.offsetX) / scaleFactor / canvasWindow.scale;
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / scaleFactor / canvasWindow.scale;
+
+		console.log("createBox initial x, y:", x, y); // ADD THIS LOG
+
 		let color;
-		if (choicesColors.length > 0) {
-			color = colorHexToRGB(choicesColors[0]);
-		} else if (singleBox) {
-			if (value.boxes.length > 0) {
-				color = value.boxes[0].color;
-			} else {
-				color = Colors[0];
-			}
-		} else {
-			color = Colors[value.boxes.length % Colors.length];
-		}
-		
-		let box = new Box(
-			draw,
-			onBoxFinishCreation,
-			canvasWindow,
-			canvasXmin,
-			canvasYmin,
-			canvasXmax,
-			canvasYmax,
-			"",
-			x,
-			y,
-			x,
-			y,
-			color,
-			boxAlpha,
-			boxMinSize,
-			handleSize,
-			boxThickness,
-			boxSelectedThickness
-		);
-		box.startCreating(event, rect.left, rect.top);
-		if (singleBox) {
-			value.boxes = [box];
-		} else {
-			value.boxes = [box, ...value.boxes];
-		}
-		selectBox(0);
-		draw();
-		dispatch("change");
-	}
+        if (choicesColors.length > 0) {
+            color = colorHexToRGB(choicesColors[0]);
+        } else if (singleBox) {
+            if (value.boxes.length > 0) {
+                color = value.boxes[0].color;
+            } else {
+                color = Colors[0];
+            }
+        } else {
+            color = Colors[value.boxes.length % Colors.length];
+        }
+
+        // ADDED: Assign a unique ID        
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let newBoxId = '';
+        for (let i = 0; i < 12; i++) {
+            newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+		// and default text for a newly created box
+        const newBoxText = ""; // Default text is empty
+
+        let box = new Box(
+            draw,
+            onBoxFinishCreation,
+            canvasWindow,
+            canvasXmin,
+            canvasYmin,
+            canvasXmax,
+            canvasYmax,
+            "", // Initial label (might be set later via modal)
+            x,
+            y,
+            x,
+            y,
+            color,
+            boxAlpha,
+			 // ADDED: Pass id and text to the Box constructor
+			newBoxId,
+            newBoxText,
+            boxMinSize,
+            handleSize,
+            boxThickness,
+            boxSelectedThickness           
+        );
+        box.startCreating(event, rect.left, rect.top);
+        if (singleBox) {
+            value.boxes = [box];
+        } else {
+            // Add the new box to the beginning of the array (so it's drawn on top and easily selected)
+             value.boxes = [box, ...value.boxes];
+        }
+        selectBox(0); // Select the newly created box
+        draw();
+        dispatch("change"); // Trigger change event to send the new box data to backend
+
+		console.log("new box:", value.boxes); // ADD THIS LOG
+    }
 
 	function setCreateMode() {
 		mode = Mode.creation;
@@ -485,46 +504,122 @@
 	const observer = new ResizeObserver(resize);
 
 	function parseInputBoxes() {
-		for (let i = 0; i < value.boxes.length; i++) {
-			let box = value.boxes[i];
-			if (!(box instanceof Box)) {
-				let color = "";
-				let label = "";
-				if (box.hasOwnProperty("color")) {
-					color = box["color"];
-					if (Array.isArray(color) && color.length === 3) {
-            			color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-        			}
-				} else {
-					color = Colors[i % Colors.length];
-				}
-				if (box.hasOwnProperty("label")) {
-					label = box["label"];
-				}
-				box = new Box(
-					draw,
-					onBoxFinishCreation,
-					canvasWindow,
-					canvasXmin,
-					canvasYmin,
-					canvasXmax,
-					canvasYmax,
-					label,
-					box["xmin"],
-					box["ymin"],
-					box["xmax"],
-					box["ymax"],
-					color,
-					boxAlpha,
-					boxMinSize,
-					handleSize,
-					boxThickness,
-					boxSelectedThickness
-				);
-				value.boxes[i] = box;
-			}
-		}
-	}
+        // Handle cases where value or value.boxes might be null or not an array
+        if (value === null || !Array.isArray(value.boxes)) {
+            if (value !== null) value.boxes = []; // Ensure it's an empty array if value exists
+            return;
+        }
+
+        const updatedBoxes = []; // Create a new array
+
+        for (let i = 0; i < value.boxes.length; i++) {
+            let boxData = value.boxes[i]; // Use a temporary variable for the item
+
+            if (boxData instanceof Box) {
+                // If it's already a Box instance, just update its canvas/scale properties
+                let boxInstance = boxData;
+                boxInstance.canvasXmin = canvasXmin;
+                boxInstance.canvasYmin = canvasYmin;
+                boxInstance.canvasXmax = canvasXmax;
+                boxInstance.canvasYmax = canvasYmax;
+                // Assuming setScaleFactor/applyUserScale handles applying the current scale based on canvasWindow
+                 boxInstance.setScaleFactor(canvasWindow.scale); // Apply current canvas scale
+                 // Note: The original code seems to use `scaleFactor` (related to image/canvas size ratio)
+                 // in setScaleFactor, but Box class internally uses `canvasWindow.scale`.
+                 // This might need alignment depending on the intended scaling logic.
+                 // Using canvasWindow.scale here is more likely correct for updating based on zoom/pan.
+
+                updatedBoxes.push(boxInstance); // Add the existing instance to the new array
+
+            } else if (boxData && typeof boxData === 'object') {
+                // If it's a raw dictionary from the backend, create a new Box instance
+                let color = "";
+                let label = "";
+                let id = "";
+                let text = "";
+
+                // Extract properties from the raw dictionary
+                 if (boxData.hasOwnProperty("color")) {
+                     color = boxData["color"];
+                     if (Array.isArray(color) && color.length === 3) {
+                         color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                     }
+                 } else {
+                     color = Colors[i % Colors.length]; // Default color if not provided
+                 }
+                 if (boxData.hasOwnProperty("label")) {
+                     label = boxData["label"];
+                 }
+                 // ADDED: Extract id and text from the incoming dictionary
+                 if (boxData.hasOwnProperty("id")) {
+                     id = boxData["id"];
+                 }
+				 else {
+					// ADDED: Assign a unique ID        
+					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+					let newBoxId = '';
+					for (let i = 0; i < 12; i++) {
+						newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
+					}
+					id = newBoxId
+				 }
+                 if (boxData.hasOwnProperty("text")) {
+                     text = boxData["text"];
+                 }
+
+                 // Coordinates (these are the _xmin, _ymin, etc. in Box class before canvas scaling)
+                 const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0; // Add checks for coordinates
+                 const ymin = boxData.hasOwnProperty("ymin") ? boxData["ymin"] : 0;
+                 const xmax = boxData.hasOwnProperty("xmax") ? boxData["xmax"] : 0;
+                 const ymax = boxData.hasOwnProperty("ymax") ? boxData["ymax"] : 0;
+                 // Scale factor from backend data (used by Box internally)
+                 const backendScaleFactor = boxData.hasOwnProperty("scaleFactor") ? boxData["scaleFactor"] : 1;
+
+
+                // Create the new Box instance, passing all extracted properties
+                 let boxInstance = new Box(
+                     draw,
+                     onBoxFinishCreation,
+                     canvasWindow,
+                     canvasXmin,
+                     canvasYmin,
+                     canvasXmax,
+                     canvasYmax,
+                     label,
+                     xmin, // Use backend coordinates (original image scale)
+                     ymin,
+                     xmax,
+                     ymax,
+                     color,
+                     boxAlpha,
+					 id, // Pass id
+                     text, // Pass text
+                     boxMinSize,
+                     handleSize,
+                     boxThickness,
+                     boxSelectedThickness                     
+                 );
+                 // Apply the backend scale factor if provided
+                 boxInstance.setScaleFactor(backendScaleFactor);
+                 // Then apply the current canvas window scale
+                 boxInstance.applyUserScale();
+
+
+                updatedBoxes.push(boxInstance); // Add the new instance to the new array
+
+            } else {
+                // If boxData is not an object (unexpected format), skip or handle error
+                console.error("Invalid box data format encountered:", boxData);
+                // Don't push this invalid item to updatedBoxes
+            }
+        }
+
+        // Replace the original array with the new one containing Box instances
+        // This is more reliable for Svelte reactivity
+        if (value !== null) {
+            value.boxes = updatedBoxes;
+        }
+    }
 
 	$: {
 		value;

@@ -13,20 +13,21 @@ function setAlpha(rgbColor: string, alpha: number) {
     const [r, g, b] = matches;
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-
-
 export default class Box {
     label: string;
     xmin: number;
     ymin: number;
     xmax: number;
     ymax: number;
-    _xmin: number;
+    _xmin: number; // Store original image coordinates
     _ymin: number;
     _xmax: number;
     _ymax: number;
     color: string;
     alpha: number;
+    // ADDED: Properties for id and text
+    id: string; // Assuming id can be string
+    text: string; // Assuming text is string
     isDragging: boolean;
     isResizing: boolean;
     isSelected: boolean;
@@ -55,6 +56,7 @@ export default class Box {
         cursor: string;
     }[];
     canvasWindow: WindowViewer;
+   
 
     constructor(
         renderCallBack: () => void,
@@ -68,14 +70,16 @@ export default class Box {
         xmin: number,
         ymin: number,
         xmax: number,
-        ymax: number,
+        ymax: number,        
         color: string = "rgb(255, 255, 255)",
         alpha: number = 0.5,
+        id: string = "",
+        text: string = "",
         minSize: number = 25,
         handleSize: number = 8,
         thickness: number = 2,
         selectedThickness: number = 4,
-        scaleFactor: number = 1,
+        scaleFactor: number = 1            
     ) {
         this.renderCallBack = renderCallBack;
         this.onFinishCreation = onFinishCreation;
@@ -92,7 +96,7 @@ export default class Box {
         this._ymin = ymin;
         this._xmax = xmax;
         this._ymax = ymax;
-        this.xmin = this._xmin * this.canvasWindow.scale;
+        this.xmin = this._xmin * this.canvasWindow.scale; // Re-add coordinate assignments if needed, or handle in applyUserScale
         this.ymin = this._ymin * this.canvasWindow.scale;
         this.xmax = this._xmax * this.canvasWindow.scale;
         this.ymax = this._ymax * this.canvasWindow.scale;
@@ -110,17 +114,23 @@ export default class Box {
         this.alpha = alpha;
         this.creatingAnchorX = "xmin";
         this.creatingAnchorY = "ymin";
+        // ADDED: Assign id and text from constructor arguments
+        this.id = id;
+        this.text = text;
     }
 
     toJSON() {
         return {
             label: this.label,
-            xmin: this._xmin,
+            xmin: this._xmin, // Use original image coordinates
             ymin: this._ymin,
             xmax: this._xmax,
             ymax: this._ymax,
             color: this.color,
-            scaleFactor: this.scaleFactor,
+            scaleFactor: this.scaleFactor, // Keep scaleFactor as it's part of the data structure
+            // ADDED: Include id and text in the JSON output
+            id: this.id,
+            text: this.text,
         };
     }
 
@@ -252,6 +262,8 @@ export default class Box {
     }
     render(ctx: CanvasRenderingContext2D): void {
         let xmin: number, ymin: number;
+
+        //console.log("Rendering box:", this.label, this.xmin, this.ymin, this.getWidth(), this.getHeight(), this.color, this.alpha);
 
         this.updateOffset()
         // Render the box and border

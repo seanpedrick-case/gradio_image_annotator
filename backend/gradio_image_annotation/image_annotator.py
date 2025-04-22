@@ -245,21 +245,45 @@ class image_annotator(Component):
         )
 
     def preprocess_boxes(self, boxes: List[dict] | None) -> list:
+        """
+        Processes boxes data from the frontend AnnotatedImageData format
+        into the backend AnnotatedImageValue format. Retains all keys,
+        applying transformations (like scaling) to relevant ones.
+        """
+        if boxes is None:
+            return []
+
         parsed_boxes = []
         for box in boxes:
-            new_box = {}
-            new_box["label"] = box.get("label", "")
-            new_box["color"] = (0, 0, 0)
-            if "color" in box:
-                match = re.match(r"rgb\((\d+), (\d+), (\d+)\)", box["color"])
-                if match:
-                    new_box["color"] = tuple(int(match.group(i)) for i in range(1, 4))
-            scale_factor = box.get("scaleFactor", 1)
-            new_box["xmin"] = round(box["xmin"] / scale_factor)
-            new_box["ymin"] = round(box["ymin"] / scale_factor)
-            new_box["xmax"] = round(box["xmax"] / scale_factor)
-            new_box["ymax"] = round(box["ymax"] / scale_factor)
+            # Start by copying all key-value pairs from the original box
+            new_box = box.copy()
+
+            # Apply scaling to coordinates, overwriting the copied values
+            # Ensure keys exist before attempting to scale/assign
+            scale_factor = box.get("scaleFactor", 1) # Get scale factor from original box
+
+            if "xmin" in new_box:
+                 new_box["xmin"] = round(new_box["xmin"] / scale_factor)
+            if "ymin" in new_box:
+                 new_box["ymin"] = round(new_box["ymin"] / scale_factor)
+            if "xmax" in new_box:
+                 new_box["xmax"] = round(new_box["xmax"] / scale_factor)
+            if "ymax" in new_box:
+                 new_box["ymax"] = round(new_box["ymax"] / scale_factor)
+
+            # Handle color format conversion if the color is a string in rgb(...) format
+            # This matches the original preprocessing logic for color
+            if "color" in new_box and isinstance(new_box["color"], str):
+                 match = re.match(r"rgb\((\d+), (\d+), (\d+)\)", new_box["color"])
+                 if match:
+                     new_box["color"] = tuple(int(match.group(i)) for i in range(1, 4))
+                 # else: keep the string color as is (e.g., hex color)
+
+            # At this point, new_box contains all original keys (including 'id' and 'text' if exists)
+            # with coordinates scaled and rgb colors converted to tuples.
+
             parsed_boxes.append(new_box)
+
         return parsed_boxes
 
     def preprocess(self, payload: AnnotatedImageData | None) -> AnnotatedImageValue | None:
