@@ -499,57 +499,113 @@
 	const observer = new ResizeObserver(resize);
 
 	function parseInputBoxes() {
-		for (let i = 0; i < value.boxes.length; i++) {
-			let box = value.boxes[i];
-			if (!(box instanceof Box)) {
-				let color = "";
-				let label = "";
-				let id = undefined; // Will be undefined if not present in backend data
-                let text = undefined; // Will be undefined if not present in backend data
-				if (box.hasOwnProperty("color")) {
-					color = box["color"];
-					if (Array.isArray(color) && color.length === 3) {
-            			color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-        			}
-				} else {
-					color = Colors[i % Colors.length];
-				}
-				if (box.hasOwnProperty("label")) {
-					label = box["label"];
-				}
-				// ADDED: Extract id and text from the incoming dictionary
-				if (box.hasOwnProperty("id")) {
-					id = box["id"];
-				}
-				if (box.hasOwnProperty("text")) {
-					text = box["text"];
-				}
-				box = new Box(
-					draw,
-					onBoxFinishCreation,
-					canvasWindow,
-					canvasXmin,
-					canvasYmin,
-					canvasXmax,
-					canvasYmax,
-					label,
-					box["xmin"],
-					box["ymin"],
-					box["xmax"],
-					box["ymax"],
-					color,
-					boxAlpha,
-					boxMinSize,
-					handleSize,
-					boxThickness,
-					boxSelectedThickness,
-					id, // ADDED: Pass id
-					text // ADDED: Pass text
-				);
-				value.boxes[i] = box;
-			}
-		}
-	}
+        // Handle cases where value or value.boxes might be null or not an array
+        if (value === null || !Array.isArray(value.boxes)) {
+            if (value !== null) value.boxes = []; // Ensure it's an empty array if value exists
+            return;
+        }
+
+        const updatedBoxes = []; // Create a new array
+
+        for (let i = 0; i < value.boxes.length; i++) {
+            let boxData = value.boxes[i]; // Use a temporary variable for the item
+
+            if (boxData instanceof Box) {
+                // If it's already a Box instance, just update its canvas/scale properties
+                let boxInstance = boxData;
+                boxInstance.canvasXmin = canvasXmin;
+                boxInstance.canvasYmin = canvasYmin;
+                boxInstance.canvasXmax = canvasXmax;
+                boxInstance.canvasYmax = canvasYmax;
+                // Assuming setScaleFactor/applyUserScale handles applying the current scale based on canvasWindow
+                 boxInstance.setScaleFactor(canvasWindow.scale); // Apply current canvas scale
+                 // Note: The original code seems to use `scaleFactor` (related to image/canvas size ratio)
+                 // in setScaleFactor, but Box class internally uses `canvasWindow.scale`.
+                 // This might need alignment depending on the intended scaling logic.
+                 // Using canvasWindow.scale here is more likely correct for updating based on zoom/pan.
+
+                updatedBoxes.push(boxInstance); // Add the existing instance to the new array
+
+            } else if (boxData && typeof boxData === 'object') {
+                // If it's a raw dictionary from the backend, create a new Box instance
+                let color = "";
+                let label = "";
+                let id = undefined;
+                let text = undefined;
+
+                // Extract properties from the raw dictionary
+                 if (boxData.hasOwnProperty("color")) {
+                     color = boxData["color"];
+                     if (Array.isArray(color) && color.length === 3) {
+                         color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                     }
+                 } else {
+                     color = Colors[i % Colors.length]; // Default color if not provided
+                 }
+                 if (boxData.hasOwnProperty("label")) {
+                     label = boxData["label"];
+                 }
+                 // ADDED: Extract id and text from the incoming dictionary
+                 if (boxData.hasOwnProperty("id")) {
+                     id = boxData["id"];
+                 }
+                 if (boxData.hasOwnProperty("text")) {
+                     text = boxData["text"];
+                 }
+
+                 // Coordinates (these are the _xmin, _ymin, etc. in Box class before canvas scaling)
+                 const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0; // Add checks for coordinates
+                 const ymin = boxData.hasOwnProperty("ymin") ? boxData["ymin"] : 0;
+                 const xmax = boxData.hasOwnProperty("xmax") ? boxData["xmax"] : 0;
+                 const ymax = boxData.hasOwnProperty("ymax") ? boxData["ymax"] : 0;
+                 // Scale factor from backend data (used by Box internally)
+                 const backendScaleFactor = boxData.hasOwnProperty("scaleFactor") ? boxData["scaleFactor"] : 1;
+
+
+                // Create the new Box instance, passing all extracted properties
+                 let boxInstance = new Box(
+                     draw,
+                     onBoxFinishCreation,
+                     canvasWindow,
+                     canvasXmin,
+                     canvasYmin,
+                     canvasXmax,
+                     canvasYmax,
+                     label,
+                     xmin, // Use backend coordinates (original image scale)
+                     ymin,
+                     xmax,
+                     ymax,
+                     color,
+                     boxAlpha,
+                     boxMinSize,
+                     handleSize,
+                     boxThickness,
+                     boxSelectedThickness,
+                     id, // Pass id
+                     text // Pass text
+                 );
+                 // Apply the backend scale factor if provided
+                 boxInstance.setScaleFactor(backendScaleFactor);
+                 // Then apply the current canvas window scale
+                 boxInstance.applyUserScale();
+
+
+                updatedBoxes.push(boxInstance); // Add the new instance to the new array
+
+            } else {
+                // If boxData is not an object (unexpected format), skip or handle error
+                console.error("Invalid box data format encountered:", boxData);
+                // Don't push this invalid item to updatedBoxes
+            }
+        }
+
+        // Replace the original array with the new one containing Box instances
+        // This is more reliable for Svelte reactivity
+        if (value !== null) {
+            value.boxes = updatedBoxes;
+        }
+    }
 
 	$: {
 		value;
