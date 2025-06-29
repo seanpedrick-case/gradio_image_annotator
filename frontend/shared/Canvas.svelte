@@ -679,6 +679,47 @@
 
 </script>
 
+{#if interactive}
+	<span class="canvas-control">
+		<button
+			class="icon"
+			class:selected={mode === Mode.creation}
+			aria-label="Create box"
+			on:click={() => setCreateMode()}><BoundingBox/></button
+		>
+		<button
+			class="icon"
+			class:selected={mode === Mode.drag}
+			aria-label="Edit boxes"
+			on:click={() => setDragMode()}><Hand/></button
+		>
+		{#if showRemoveButton}
+			<button
+				class="icon"
+				aria-label="Remove boxes"
+				on:click={() => onDeleteBox()}><Trash/></button
+			>
+		{/if}
+		{#if !disableEditBoxes && labelDetailLock}
+		<button
+			class="icon"
+			aria-label="Edit label"
+			on:click={() => editDefaultLabelVisible = true}><Label/></button
+		>
+		{/if}
+		<button
+			class="icon"
+			aria-label="Rotate counterclockwise"
+			on:click={() => onRotateImage(-1)}><Undo/></button
+		>
+		<button
+			class="icon"
+			aria-label="Rotate clockwise"
+			on:click={() => onRotateImage(1)}><Redo/></button
+		>
+	</span>
+{/if}
+
 <div
 	class="canvas-container"
 	tabindex="-1"
