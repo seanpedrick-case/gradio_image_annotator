@@ -3,7 +3,7 @@
     import { BaseButton } from "@gradio/button";
     import { BaseDropdown } from "./patched_dropdown/Index.svelte";
 	import { createEventDispatcher } from "svelte";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount } from "svelte";
     import { Lock, Unlock } from "./icons/index";
 
     export let label = "";
@@ -59,9 +59,12 @@
     }
 
     function handleKeyPress(event: KeyboardEvent) {
-		switch (event.key) {
-			case "Enter":
+		switch (event.key.toLowerCase()) {
+			case "enter":
                 dispatchChange(1);
+				break;
+            case "escape":
+                dispatchChange(0);
 				break;
 		}
 	}
@@ -70,11 +73,11 @@
 		document.addEventListener("keydown", handleKeyPress);
         currentLabel = label;
         currentColor = color;
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyPress);
+        };
 	});
-    
-	onDestroy(() => {
-        document.removeEventListener("keydown", handleKeyPress);
-  	});
 
 </script>
 
@@ -87,7 +90,7 @@
                 class="icon"
                 class:selected={labelDetailLock === true}
                 aria-label="Lock label detail"
-                on:click={onLockClick}>
+                onclick={onLockClick}>
                 {#if labelDetailLock}<Lock/>{:else}<Unlock/>{/if}</button
                 >
             </div>
@@ -113,21 +116,21 @@
             </div>
             <div style="margin-right: 8px;">
                 <BaseButton
-                on:click={() => dispatchChange(0)}
+                    onclick={() => dispatchChange(0)}
                 >Cancel</BaseButton>
             </div>
             {#if showRemove}
                 <div style="margin-right: 8px;">
                     <BaseButton
                         variant="stop"
-                        on:click={() => dispatchChange(-1)}
+                        onclick={() => dispatchChange(-1)}
                     >Remove</BaseButton>
                 </div>
             {/if}
             <div>
                 <BaseButton
                     variant="primary"
-                    on:click={() => dispatchChange(1)}
+                    onclick={() => dispatchChange(1)}
                 >OK</BaseButton>
             </div>
         </span>
