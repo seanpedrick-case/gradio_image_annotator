@@ -58,6 +58,7 @@
 		show_remove_button: boolean;
 		handles_cursor: boolean;
 		use_default_label: boolean;
+		enable_keyboard_shortcuts: boolean;
 	};
 
 	class ImageAnnotatorGradio extends Gradio<ImageAnnotatorEvents, ImageAnnotatorProps> {
@@ -148,6 +149,7 @@
 		showRemoveButton={gradio.props.show_remove_button}
 		handlesCursor={gradio.props.handles_cursor}
 		useDefaultLabel={gradio.props.use_default_label}
+		enableKeyboardShortcuts={gradio.props.enable_keyboard_shortcuts}
 	>
 		{#if active_source === "upload"}
 			<UploadText i18n={gradio.i18n} type="image" />
