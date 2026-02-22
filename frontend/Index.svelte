@@ -80,7 +80,7 @@
 	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(
 		gradio.props.sources ? gradio.props.sources[0] : null
 	);
-	let old_value = $state(gradio.props.value);
+	let old_value = gradio.props.value;
 
 	$effect(() => {
 		if (old_value !== gradio.props.value) {
