@@ -131,7 +131,6 @@
 	}
 
 	function handlePointerDown(event: PointerEvent) {
-		console.log("handlePointerDown called. Current mode:", mode); // ADD THIS LOG
 		if (!interactive) {
 			return;
 		}
@@ -278,10 +277,8 @@
 
 	function createBox(event: PointerEvent) {
 		const rect = canvas.getBoundingClientRect();
-		const x = (event.clientX - rect.left - canvasWindow.offsetX) / scaleFactor / canvasWindow.scale;
-		const y = (event.clientY - rect.top - canvasWindow.offsetY) / scaleFactor / canvasWindow.scale;
-
-		console.log("createBox initial x, y:", x, y); // ADD THIS LOG
+		const x = (event.clientX - rect.left - canvasWindow.offsetX) / canvasWindow.scale;
+		const y = (event.clientY - rect.top - canvasWindow.offsetY) / canvasWindow.scale;
 
 		let color;
         if (choicesColors.length > 0) {
@@ -296,14 +293,12 @@
             color = Colors[value.boxes.length % Colors.length];
         }
 
-        // ADDED: Assign a unique ID        
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let newBoxId = '';
         for (let i = 0; i < 12; i++) {
             newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
         }
-		// and default text for a newly created box
-        const newBoxText = ""; // Default text is empty
+        const newBoxText = "";
 
         let box = new Box(
             draw,
@@ -313,20 +308,20 @@
             canvasYmin,
             canvasXmax,
             canvasYmax,
-            "", // Initial label (might be set later via modal)
+            "",
             x,
             y,
             x,
             y,
             color,
             boxAlpha,
-			 // ADDED: Pass id and text to the Box constructor
 			newBoxId,
             newBoxText,
             boxMinSize,
             handleSize,
             boxThickness,
-            boxSelectedThickness           
+            boxSelectedThickness,
+            scaleFactor
         );
         box.startCreating(event, rect.left, rect.top);
         if (singleBox) {
@@ -335,11 +330,9 @@
             // Add the new box to the beginning of the array (so it's drawn on top and easily selected)
              value.boxes = [box, ...value.boxes];
         }
-        selectBox(0); // Select the newly created box
+        selectBox(0);
         draw();
-        dispatch("change"); // Trigger change event to send the new box data to backend
-
-		console.log("new box:", value.boxes); // ADD THIS LOG
+        dispatch("change");
     }
 
 	function setCreateMode() {
@@ -555,7 +548,6 @@
                 boxData.canvasYmin = canvasYmin;
                 boxData.canvasXmax = canvasXmax;
                 boxData.canvasYmax = canvasYmax;
-                boxData.setScaleFactor(canvasWindow.scale);
                 updatedBoxes.push(boxData);
 
             } else if (boxData && typeof boxData === 'object') {

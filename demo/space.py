@@ -44,7 +44,7 @@ import numpy as np
 
 
 example_annotation = {
-    "image": "https://gradio-builds.s3.amazonaws.com/demo-files/base.png",
+    "image":   "demo/graduate-job-example-cover-letter_page_0.png", # "https://gradio-builds.s3.amazonaws.com/demo-files/base.png", #
     "boxes": [
         {
             "xmin": 636,
