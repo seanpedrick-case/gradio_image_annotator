@@ -3,7 +3,6 @@
 </script>
 
 <script lang="ts">
-	import { tick } from "svelte";
 	import { Gradio } from "@gradio/utils";
 	import { Block, Empty, UploadText } from "@gradio/atoms";
 	import { Image } from "@gradio/icons";
@@ -80,14 +79,6 @@
 	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(
 		gradio.props.sources ? gradio.props.sources[0] : null
 	);
-	let old_value = gradio.props.value;
-
-	$effect(() => {
-		if (old_value !== gradio.props.value) {
-			old_value = gradio.props.value;
-			gradio.dispatch("change");
-		}
-	});
 </script>
 
 <Block
