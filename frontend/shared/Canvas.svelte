@@ -482,7 +482,7 @@
 		draw();
 	}
 
-	function resize() {
+	function resize(dispatchChange = true) {
 		if (canvas) {
 			scaleFactor = 1;
 			canvas.width = canvas.clientWidth;
@@ -533,64 +533,53 @@
 				}
 			}
 			draw();
-			dispatch("change");
+			if (dispatchChange) dispatch("change");
 		}
 	}
-	const observer = new ResizeObserver(resize);
+	const observer = new ResizeObserver(() => resize());
 
 	function parseInputBoxes() {
-        // Handle cases where value or value.boxes might be null or not an array
         if (value === null || !Array.isArray(value.boxes)) {
-            if (value !== null) value.boxes = []; // Ensure it's an empty array if value exists
+            if (value !== null) value.boxes = [];
             return;
         }
 
-        const updatedBoxes = []; // Create a new array
+        let needsArrayReplacement = false;
+        const updatedBoxes = [];
 
         for (let i = 0; i < value.boxes.length; i++) {
-            let boxData = value.boxes[i]; // Use a temporary variable for the item
+            let boxData = value.boxes[i];
 
             if (boxData instanceof Box) {
-                // If it's already a Box instance, just update its canvas/scale properties
-                let boxInstance = boxData;
-                boxInstance.canvasXmin = canvasXmin;
-                boxInstance.canvasYmin = canvasYmin;
-                boxInstance.canvasXmax = canvasXmax;
-                boxInstance.canvasYmax = canvasYmax;
-                // Assuming setScaleFactor/applyUserScale handles applying the current scale based on canvasWindow
-                 boxInstance.setScaleFactor(canvasWindow.scale); // Apply current canvas scale
-                 // Note: The original code seems to use `scaleFactor` (related to image/canvas size ratio)
-                 // in setScaleFactor, but Box class internally uses `canvasWindow.scale`.
-                 // This might need alignment depending on the intended scaling logic.
-                 // Using canvasWindow.scale here is more likely correct for updating based on zoom/pan.
-
-                updatedBoxes.push(boxInstance); // Add the existing instance to the new array
+                boxData.canvasXmin = canvasXmin;
+                boxData.canvasYmin = canvasYmin;
+                boxData.canvasXmax = canvasXmax;
+                boxData.canvasYmax = canvasYmax;
+                boxData.setScaleFactor(canvasWindow.scale);
+                updatedBoxes.push(boxData);
 
             } else if (boxData && typeof boxData === 'object') {
-                // If it's a raw dictionary from the backend, create a new Box instance
+                needsArrayReplacement = true;
                 let color = "";
                 let label = "";
                 let id = "";
                 let text = "";
 
-                // Extract properties from the raw dictionary
                  if (boxData.hasOwnProperty("color")) {
                      color = boxData["color"];
                      if (Array.isArray(color) && color.length === 3) {
                          color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
                      }
                  } else {
-                     color = Colors[i % Colors.length]; // Default color if not provided
+                     color = Colors[i % Colors.length];
                  }
                  if (boxData.hasOwnProperty("label")) {
                      label = boxData["label"];
                  }
-                 // ADDED: Extract id and text from the incoming dictionary
                  if (boxData.hasOwnProperty("id")) {
                      id = boxData["id"];
                  }
 				 else {
-					// ADDED: Assign a unique ID        
 					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 					let newBoxId = '';
 					for (let i = 0; i < 12; i++) {
@@ -602,16 +591,12 @@
                      text = boxData["text"];
                  }
 
-                 // Coordinates (these are the _xmin, _ymin, etc. in Box class before canvas scaling)
-                 const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0; // Add checks for coordinates
+                 const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0;
                  const ymin = boxData.hasOwnProperty("ymin") ? boxData["ymin"] : 0;
                  const xmax = boxData.hasOwnProperty("xmax") ? boxData["xmax"] : 0;
                  const ymax = boxData.hasOwnProperty("ymax") ? boxData["ymax"] : 0;
-                 // Scale factor from backend data (used by Box internally)
                  const backendScaleFactor = boxData.hasOwnProperty("scaleFactor") ? boxData["scaleFactor"] : 1;
 
-
-                // Create the new Box instance, passing all extracted properties
                  let boxInstance = new Box(
                      draw,
                      onBoxFinishCreation,
@@ -621,47 +606,44 @@
                      canvasXmax,
                      canvasYmax,
                      label,
-                     xmin, // Use backend coordinates (original image scale)
+                     xmin,
                      ymin,
                      xmax,
                      ymax,
                      color,
                      boxAlpha,
-					 id, // Pass id
-                     text, // Pass text
+					 id,
+                     text,
                      boxMinSize,
                      handleSize,
                      boxThickness,
                      boxSelectedThickness                     
                  );
-                 // Apply the backend scale factor if provided
                  boxInstance.setScaleFactor(backendScaleFactor);
-                 // Then apply the current canvas window scale
                  boxInstance.applyUserScale();
 
-
-                updatedBoxes.push(boxInstance); // Add the new instance to the new array
+                updatedBoxes.push(boxInstance);
 
             } else {
-                // If boxData is not an object (unexpected format), skip or handle error
                 console.error("Invalid box data format encountered:", boxData);
-                // Don't push this invalid item to updatedBoxes
             }
         }
 
-        // Replace the original array with the new one containing Box instances
-        // This is more reliable for Svelte reactivity
-        if (value !== null) {
+        if (needsArrayReplacement && value !== null) {
             value.boxes = updatedBoxes;
         }
     }
 
+	let _lastProcessedValue = null;
 	$: {
-		value;
-		setImage();
-		parseInputBoxes();
-		resize();
-		draw();
+		const currentValue = value;
+		if (currentValue !== _lastProcessedValue) {
+			_lastProcessedValue = currentValue;
+			setImage();
+			parseInputBoxes();
+			resize(false);
+			draw();
+		}
 	}
 
 	function setImage(){
@@ -712,6 +694,53 @@
 	on:keydown={handleKeyPress}
 	on:click={() => annotatorContainerDiv.focus()}
 >
+	{#if interactive}
+		<span class="canvas-control">
+			<button
+				class="icon"
+				class:selected={mode === Mode.creation}
+				aria-label="Create box"
+				title="Create box (C)"
+				on:click={() => setCreateMode()}><BoundingBox/></button
+			>
+			<button
+				class="icon"
+				class:selected={mode === Mode.drag}
+				aria-label="Drag boxes"
+				title="Drag boxes (D)"
+				on:click={() => setDragMode()}><Hand/></button
+			>
+			{#if showRemoveButton}
+				<button
+					class="icon"
+					aria-label="Remove box"
+					title="Remove box (Del)"
+					on:click={() => onDeleteBox()}><Trash/></button
+				>
+			{/if}
+			{#if !disableEditBoxes && labelDetailLock}
+				<button
+					class="icon"
+					aria-label="Edit label"
+					title="Edit label"
+					on:click={() => editDefaultLabelVisible = true}><Label/></button
+				>
+			{/if}
+			<button
+				class="icon"
+				aria-label="Rotate counterclockwise"
+				title="Rotate counterclockwise"
+				on:click={() => onRotateImage(-1)}><Undo/></button
+			>
+			<button
+				class="icon"
+				aria-label="Rotate clockwise"
+				title="Rotate clockwise"
+				on:click={() => onRotateImage(1)}><Redo/></button
+			>
+		</span>
+	{/if}
+
 	<div class="canvas-container">
 		<canvas
 			bind:this={canvas}
