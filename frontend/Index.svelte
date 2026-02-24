@@ -103,7 +103,7 @@
 	<ImageAnnotator
 		bind:active_source
 		bind:value={gradio.props.value}
-		on:change={() => gradio.dispatch("change")}
+		on:change={() => setTimeout(() => gradio.dispatch("change"), 0)}
 		selectable={gradio.props._selectable}
 		root={gradio.shared.root}
 		sources={gradio.props.sources}
