@@ -324,15 +324,18 @@
             scaleFactor
         );
         box.startCreating(event, rect.left, rect.top);
-        if (singleBox) {
-            value.boxes = [box];
-        } else {
-            // Add the new box to the beginning of the array (so it's drawn on top and easily selected)
-             value.boxes = [box, ...value.boxes];
-        }
-        selectBox(0);
-        draw();
-        dispatch("change");
+        // Defer binding update to next frame to avoid effect_update_depth_exceeded when
+        // the app has blocks.load() handlers (Gradio 6 reactive graph depth).
+        requestAnimationFrame(() => {
+            if (singleBox) {
+                value.boxes = [box];
+            } else {
+                value.boxes = [box, ...value.boxes];
+            }
+            selectBox(0);
+            draw();
+            dispatch("change");
+        });
     }
 
 	function setCreateMode() {
