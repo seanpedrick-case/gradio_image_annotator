@@ -1,137 +1,120 @@
 <script lang="ts">
-	import { BaseColorPicker } from "@gradio/colorpicker";
-    import { BaseButton } from "@gradio/button";
-    import { BaseDropdown } from "./patched_dropdown/Index.svelte";
-	import { createEventDispatcher } from "svelte";
+    // ModalBox uses ONLY plain HTML elements (no Gradio components) so it adds
+    // zero entries to the Gradio component registry.  Using Gradio sub-components
+    // (BaseDropdown, BaseColorPicker, BaseButton) caused their $effects to call
+    // register() on every run, which — combined with blocks.load() + deeply nested
+    // layout components — pushed the flush_effects depth past 1000 and threw
+    // effect_update_depth_exceeded.
+    import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
     import { Lock, Unlock } from "./icons/index";
 
-    export let label = "";
+    export let visible = false;
     export let currentLabel = "";
-    export let choices = [];  // [(label, i)]
-    export let choicesColors = [];
-    export let color = "";
     export let currentColor = "";
+    export let choices: [string, number][] = [];
+    export let choicesColors: string[] = [];
     export let showRemove = true;
     export let labelDetailLock = false;
-    
-    const dispatch = createEventDispatcher<{
-		change: object;
-	}>();
+
+    // Unique ID so the <datalist> ID doesn't clash across the three ModalBox instances.
+    const uid = Math.random().toString(36).slice(2, 8);
+
+    const dispatch = createEventDispatcher<{ change: object }>();
 
     function dispatchChange(ret: number) {
         dispatch("change", {
             label: currentLabel,
             color: currentColor,
             lock: labelDetailLock,
-            ret: ret // -1: remove, 0: cancel, 1: change
+            ret: ret  // -1: remove, 0: cancel, 1: ok
         });
     }
 
-    function onDropDownChange(event) {
-        const { detail } = event;
-		let choice = detail;
-
-        if (Number.isInteger(choice)) {
-            if (Array.isArray(choicesColors) && choice < choicesColors.length) {
-                currentColor = choicesColors[choice];
+    function onLabelInput(event: Event) {
+        const value = (event.target as HTMLInputElement).value;
+        currentLabel = value;
+        // When user picks a known choice, sync the associated color.
+        if (Array.isArray(choices)) {
+            const idx = choices.findIndex(([label]) => label === value);
+            if (idx >= 0 && Array.isArray(choicesColors) && idx < choicesColors.length) {
+                currentColor = choicesColors[idx];
             }
-            if (Array.isArray(choices) && choice < choices.length) {
-                currentLabel = choices[choice][0];
-            }
-        } else {
-            currentLabel = choice;
         }
     }
 
-    function onColorChange(event) {
-        const { detail } = event;
-		currentColor = detail;
-    }
-
-    function onDropDownEnter(event) {
-        onDropDownChange(event);
-        dispatchChange(1);
-    }
-
-    function onLockClick(event) {
-        labelDetailLock = !labelDetailLock;
+    function onColorInput(event: Event) {
+        currentColor = (event.target as HTMLInputElement).value;
     }
 
     function handleKeyPress(event: KeyboardEvent) {
-		switch (event.key.toLowerCase()) {
-			case "enter":
-                dispatchChange(1);
-				break;
-            case "escape":
-                dispatchChange(0);
-				break;
-		}
-	}
+        if (!visible) return;
+        switch (event.key.toLowerCase()) {
+            case "enter": dispatchChange(1); break;
+            case "escape": dispatchChange(0); break;
+        }
+    }
 
-	onMount(() => {
-		document.addEventListener("keydown", handleKeyPress);
-        currentLabel = label;
-        currentColor = color;
+    function onLockClick() {
+        labelDetailLock = !labelDetailLock;
+    }
 
-        return () => {
-            document.removeEventListener("keydown", handleKeyPress);
-        };
-	});
-
+    onMount(() => {
+        document.addEventListener("keydown", handleKeyPress);
+        return () => document.removeEventListener("keydown", handleKeyPress);
+    });
 </script>
 
-<div class="modal" id="model-box-edit">
+<div class="modal" style:display={visible ? '' : 'none'}>
     <div class="modal-container">
-        <span class="model-content">
+        <span class="modal-content">
             {#if !showRemove}
-            <div style="margin-right: 8px;">
-                <button
-                class="icon"
-                class:selected={labelDetailLock === true}
-                aria-label="Lock label detail"
-                onclick={onLockClick}>
-                {#if labelDetailLock}<Lock/>{:else}<Unlock/>{/if}</button
-                >
-            </div>
-            {/if}
-            <div style="margin-right: 10px;">
-                <BaseDropdown
-                    value={currentLabel}
-                    label="Label"
-                    {choices}
-                    show_label={false}
-                    allow_custom_value={true}
-                    on:change={onDropDownChange}
-                    on:enter={onDropDownEnter}
-                />
-            </div>
-            <div style="margin-right: 40px; margin-bottom: 8px;">
-                <BaseColorPicker
-                    value={currentColor}
-                    label="Color"
-                    show_label={false}
-                    on:change={onColorChange}
-                />
-            </div>
-            <div style="margin-right: 8px;">
-                <BaseButton
-                    onclick={() => dispatchChange(0)}
-                >Cancel</BaseButton>
-            </div>
-            {#if showRemove}
-                <div style="margin-right: 8px;">
-                    <BaseButton
-                        variant="stop"
-                        onclick={() => dispatchChange(-1)}
-                    >Remove</BaseButton>
+                <div class="lock-wrap">
+                    <button
+                        class="icon"
+                        class:selected={labelDetailLock}
+                        aria-label="Lock label detail"
+                        on:click={onLockClick}
+                    >{#if labelDetailLock}<Lock/>{:else}<Unlock/>{/if}</button>
                 </div>
             {/if}
-            <div>
-                <BaseButton
-                    variant="primary"
-                    onclick={() => dispatchChange(1)}
-                >OK</BaseButton>
+
+            <div class="field-wrap">
+                <label class="field-label" for="label-input-{uid}">Label</label>
+                <input
+                    id="label-input-{uid}"
+                    class="label-input"
+                    type="text"
+                    list="label-choices-{uid}"
+                    value={currentLabel}
+                    on:input={onLabelInput}
+                    on:change={onLabelInput}
+                />
+                <datalist id="label-choices-{uid}">
+                    {#each choices as [label]}
+                        <option value={label}>{label}</option>
+                    {/each}
+                </datalist>
+            </div>
+
+            <div class="field-wrap color-wrap">
+                <label class="field-label" for="color-input-{uid}">Color</label>
+                <input
+                    id="color-input-{uid}"
+                    class="color-input"
+                    type="color"
+                    value={currentColor || '#000000'}
+                    on:input={onColorInput}
+                    on:change={onColorInput}
+                />
+            </div>
+
+            <div class="btn-wrap">
+                <button class="modal-btn" on:click={() => dispatchChange(0)}>Cancel</button>
+                {#if showRemove}
+                    <button class="modal-btn modal-btn-danger" on:click={() => dispatchChange(-1)}>Remove</button>
+                {/if}
+                <button class="modal-btn modal-btn-primary" on:click={() => dispatchChange(1)}>OK</button>
             </div>
         </span>
     </div>
@@ -150,13 +133,10 @@
     }
 
     .modal-container {
-        border-style: solid;
-        border-width: var(--block-border-width);
-        border-color: var(--block-border-color);
+        border: var(--block-border-width) solid var(--block-border-color);
         margin-top: 10%;
         padding: 20px;
         box-shadow: var(--block-shadow);
-        border-color: var(--block-border-color);
         border-radius: var(--block-radius);
         background: var(--block-background-fill);
         position: fixed;
@@ -165,25 +145,117 @@
         width: fit-content;
     }
 
-    .model-content {
+    .modal-content {
         display: flex;
         align-items: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* ---- lock icon ---- */
+    .lock-wrap {
+        display: flex;
+        align-items: center;
     }
 
     .icon {
-		width: 22px;
-		height: 22px;
-		margin: var(--spacing-lg) var(--spacing-xs);
-		padding: var(--spacing-xs);
-		color: var(--neutral-400);
-		border-radius: var(--radius-md);
-	}
+        width: 22px;
+        height: 22px;
+        padding: var(--spacing-xs);
+        color: var(--neutral-400);
+        border-radius: var(--radius-md);
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
 
-    .icon:hover{
-		color: var(--color-accent);
-	}
+    .icon:hover { color: var(--color-accent); }
+    .selected    { color: var(--color-accent); }
 
-    .selected {
-		color: var(--color-accent);
-	}
+    /* ---- label / color fields ---- */
+    .field-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .field-label {
+        font-size: var(--text-sm);
+        font-weight: var(--weight-semibold);
+        color: var(--body-text-color);
+    }
+
+    .label-input {
+        height: var(--size-8);
+        min-width: 160px;
+        padding: 0 var(--spacing-sm);
+        border: var(--input-border-width) solid var(--input-border-color);
+        border-radius: var(--input-radius);
+        background: var(--input-background-fill);
+        color: var(--body-text-color);
+        font-size: var(--text-md);
+    }
+
+    .label-input:focus {
+        outline: none;
+        border-color: var(--input-border-color-focus);
+        box-shadow: var(--input-shadow-focus);
+    }
+
+    .color-wrap { align-items: flex-start; }
+
+    .color-input {
+        height: var(--size-8);
+        width: var(--size-14);
+        padding: 2px 4px;
+        border: var(--input-border-width) solid var(--input-border-color);
+        border-radius: var(--input-radius);
+        background: var(--input-background-fill);
+        cursor: pointer;
+    }
+
+    /* ---- buttons ---- */
+    .btn-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 4px;
+    }
+
+    .modal-btn {
+        height: var(--size-8);
+        padding: 0 var(--spacing-lg);
+        border: var(--input-border-width) solid var(--input-border-color);
+        border-radius: var(--input-radius);
+        background: var(--button-secondary-background-fill);
+        color: var(--button-secondary-text-color);
+        font-size: var(--text-md);
+        font-weight: var(--weight-semibold);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .modal-btn:hover {
+        background: var(--button-secondary-background-fill-hover);
+    }
+
+    .modal-btn-primary {
+        background: var(--button-primary-background-fill);
+        color: var(--button-primary-text-color);
+        border-color: var(--button-primary-border-color);
+    }
+
+    .modal-btn-primary:hover {
+        background: var(--button-primary-background-fill-hover);
+    }
+
+    .modal-btn-danger {
+        background: var(--button-cancel-background-fill, var(--error-background-fill, #fee2e2));
+        color: var(--button-cancel-text-color, var(--error-text-color, #991b1b));
+        border-color: var(--button-cancel-border-color, var(--error-border-color, #fca5a5));
+    }
+
+    .modal-btn-danger:hover {
+        filter: brightness(0.95);
+    }
 </style>

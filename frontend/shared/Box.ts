@@ -25,9 +25,10 @@ export default class Box {
     _ymax: number;
     color: string;
     alpha: number;
-    // ADDED: Properties for id and text
+    // ADDED: Properties for id, text and page
     id: string; // Assuming id can be string
     text: string; // Assuming text is string
+    page: number; // Assuming page is number
     isDragging: boolean;
     isResizing: boolean;
     isSelected: boolean;
@@ -75,6 +76,7 @@ export default class Box {
         alpha: number = 0.5,
         id: string = "",
         text: string = "",
+        page: number = 0,
         minSize: number = 25,
         handleSize: number = 8,
         thickness: number = 2,
@@ -117,6 +119,7 @@ export default class Box {
         // ADDED: Assign id and text from constructor arguments
         this.id = id;
         this.text = text;
+        this.page = page;
     }
 
     toJSON() {
@@ -131,6 +134,7 @@ export default class Box {
             // ADDED: Include id and text in the JSON output
             id: this.id,
             text: this.text,
+            page: this.page,
         };
     }
 
@@ -147,6 +151,18 @@ export default class Box {
         this.applyUserScale();
         // this.updateHandles();
         this.scaleFactor = scaleFactor;
+    }
+
+    /**
+     * Scale box coordinates from (oldDisplayHeight, oldDisplayWidth) space into
+     * the new display size after a rotation, using separate x/y scale factors
+     * so aspect-ratio change from the rotation is handled correctly.
+     */
+    scaleFromRotatedDisplay(scaleX: number, scaleY: number): void {
+        this._xmin = Math.round(this._xmin * scaleX);
+        this._xmax = Math.round(this._xmax * scaleX);
+        this._ymin = Math.round(this._ymin * scaleY);
+        this._ymax = Math.round(this._ymax * scaleY);
     }
 
     updateHandles(): void {
@@ -559,16 +575,18 @@ export default class Box {
         const [_xmin, _xmax, _ymin, _ymax] = [this._xmin, this._xmax, this._ymin, this._ymax];
         switch (op) {
             case 1:
-                this._xmin = this.canvasWindow.imageWidth - _ymax;
-                this._xmax = this.canvasWindow.imageWidth - _ymin;
+                // 90° CW: new_x = H - old_y, new_y = old_x (new image is H wide × W tall)
+                this._xmin = this.canvasWindow.imageHeight - _ymax;
+                this._xmax = this.canvasWindow.imageHeight - _ymin;
                 this._ymin = _xmin;
                 this._ymax = _xmax;
                 break;
             case -1:
+                // 90° CCW: new_x = old_y, new_y = W - old_x (new image is H wide × W tall)
                 this._xmin = _ymin;
                 this._xmax = _ymax;
-                this._ymin = this.canvasWindow.imageHeight - _xmax;
-                this._ymax = this.canvasWindow.imageHeight - _xmin;
+                this._ymin = this.canvasWindow.imageWidth - _xmax;
+                this._ymax = this.canvasWindow.imageWidth - _xmin;
                 break;
         }
         this.applyUserScale();

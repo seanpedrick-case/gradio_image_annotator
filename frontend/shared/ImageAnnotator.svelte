@@ -68,7 +68,7 @@
 	$: if (uploading) clear();
 
 	const dispatch = createEventDispatcher<{
-		change: undefined;
+		change: any;
 		clear: undefined;
 		drag: boolean;
 		upload?: never;
@@ -170,9 +170,9 @@
 		{/if}
 		{#if value !== null}
 			<div class:selectable class="image-frame" >
-				<ImageCanvas
-					bind:value
-					on:change={() => dispatch("change")}
+			<ImageCanvas
+				bind:value
+				on:change={(e) => dispatch("change", e.detail)}
 					{boxesAlpha}
 					{labelList}
 					{labelColors}

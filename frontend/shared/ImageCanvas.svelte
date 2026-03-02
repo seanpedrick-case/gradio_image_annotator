@@ -50,14 +50,14 @@
 	}
 
 	const dispatch = createEventDispatcher<{
-		change: undefined;
+		change: any;
 	}>();
 
 </script>
 
 <Canvas
 	bind:value
-	on:change={() => dispatch("change")}
+	on:change={(e) => dispatch("change", e.detail)}
 	{interactive}
 	boxAlpha={boxesAlpha}
 	choices={labelList}
