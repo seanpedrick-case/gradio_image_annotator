@@ -60,9 +60,35 @@
 		enable_keyboard_shortcuts: boolean;
 	};
 
+	// Plain (non-reactive) variable holding the latest box+orientation data from Canvas.
+	// Canvas dispatches "change" with this data instead of writing to value.boxes ($state),
+	// which would trigger the main Gradio app's reactive cascade and cause
+	// effect_update_depth_exceeded when blocks.load() + nested layout components are present.
+	let _pendingUpdate: { boxes?: any[]; orientation?: number } | null = null;
+
 	class ImageAnnotatorGradio extends Gradio<ImageAnnotatorEvents, ImageAnnotatorProps> {
+		// When Gradio sends new value data from Python, clear any pending user changes
+		// so get_data() returns the Gradio-provided data rather than stale user edits.
+		override set_data(data: Record<string, unknown>) {
+			if ('value' in data) {
+				_pendingUpdate = null;
+			}
+			super.set_data(data);
+		}
+
 		async get_data() {
-			return await super.get_data();
+			const snapshot = await super.get_data();
+			// Apply the latest box/orientation data from Canvas without ever having written
+			// to the $state proxy (which is what caused the reactive cascade).
+			if (_pendingUpdate !== null && snapshot.value !== null) {
+				if (_pendingUpdate.boxes !== undefined) {
+					snapshot.value.boxes = _pendingUpdate.boxes;
+				}
+				if (_pendingUpdate.orientation !== undefined) {
+					snapshot.value.orientation = _pendingUpdate.orientation;
+				}
+			}
+			return snapshot;
 		}
 	}
 
@@ -103,7 +129,13 @@
 	<ImageAnnotator
 		bind:active_source
 		bind:value={gradio.props.value}
-		on:change={() => setTimeout(() => gradio.dispatch("change"), 0)}
+		on:change={(e) => {
+			// Store box+orientation data from Canvas in a plain variable (NOT $state).
+			// This is what get_data() will use, avoiding any $state writes that would
+			// cascade through the main Gradio app's reactive system.
+			_pendingUpdate = e.detail ?? null;
+			setTimeout(() => gradio.dispatch("change"), 0);
+		}}
 		selectable={gradio.props._selectable}
 		root={gradio.shared.root}
 		sources={gradio.props.sources}

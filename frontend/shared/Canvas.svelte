@@ -39,6 +39,13 @@
 	let mode: Mode = Mode.drag;
 	let canvasWindow: WindowViewer = new WindowViewer(draw);
 
+	// Box instances are stored here, NOT in value.boxes. This keeps Box instances
+	// out of the Svelte 5 $state deep-reactive proxy (value lives in gradio.props which
+	// is $state). Without this separation, draw()→render()→updateOffset()→updateHandles()
+	// writes hundreds of reactive signals per frame, causing flush_count > 1000 and
+	// the effect_update_depth_exceeded error when blocks.load() + nested layout are present.
+	let _boxes: Box[] = [];
+
 	if (value !== null && value.boxes.length == 0) {
 		mode = Mode.creation;
 	}
@@ -56,6 +63,16 @@
 	let newModalVisible = false;
 	let editDefaultLabelVisible = false;
 
+	// Per-modal label/color state written synchronously in the event handler BEFORE
+	// setting the corresponding visibility flag, so they land at effect-depth 0
+	// rather than being written inside an already-running flush_effects cycle.
+	let editModalCurrentLabel = "";
+	let editModalCurrentColor = "";
+	let newModalCurrentLabel = "";
+	let newModalCurrentColor = "";
+	let defaultModalCurrentLabel = "";
+	let defaultModalCurrentColor = "";
+
 	let labelDetailLock = useDefaultLabel;
 	let defaultLabelCache = {
 		label: "",
@@ -63,8 +80,22 @@
 	};
 
 	const dispatch = createEventDispatcher<{
-		change: undefined;
+		change: { boxes: any[], orientation: number } | null;
 	}>();
+
+	// Store orientation locally as a plain (non-reactive) property so we never write
+	// to value.orientation (a $state proxy property), which would trigger the main
+	// Gradio app's reactive cascade and cause effect_update_depth_exceeded.
+	const _internal = { orientation: (value !== null ? value.orientation : 0) ?? 0 };
+
+	/** Dispatch change event in next macrotask, passing current box + orientation data as
+	 *  detail so Index.svelte can return it from get_data() WITHOUT writing to $state.
+	 *  This completely avoids triggering the main app's reactive cascade. */
+	function dispatchChangeDeferred() {
+		const boxes = _boxes.map(b => b.toJSON());
+		const orientation = _internal.orientation;
+		setTimeout(() => dispatch("change", { boxes, orientation }), 0);
+	}
 
 	function colorHexToRGB(hex: string) {
 		var r = parseInt(hex.slice(1, 3), 16),
@@ -89,7 +120,7 @@
 			ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
 			ctx.scale(canvasWindow.scale, canvasWindow.scale);
 			if (image !== null){
-				switch (value.orientation) {
+				switch (_internal.orientation) {
 					case 0:
 						ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
 						break;
@@ -115,17 +146,17 @@
 				// ctx.resetTransform();
 			}
 			
-			for (const box of value.boxes.slice().reverse()) {
+			for (const box of _boxes.slice().reverse()) {
 				box.render(ctx);
 			}
 		}
 	}
 
-    function selectBox(index: number) {
+	function selectBox(index: number) {
 		selectedBox = index;
-		value.boxes.forEach(box => {box.setSelected(false);});
-		if (index >= 0 && index < value.boxes.length){
-			value.boxes[index].setSelected(true);
+		_boxes.forEach((box) => box.setSelected(false));
+		if (index >= 0 && index < _boxes.length) {
+			_boxes[index].setSelected(true);
 		}
 		draw();
 	}
@@ -156,7 +187,7 @@
 		let selectedBoxFlag = false;
 
 		// Check if the mouse is over any of the resizing handles
-		for (const [i, box] of value.boxes.entries()) {
+		for (const [i, box] of _boxes.entries()) {
 			const handleIndex = box.indexOfPointInsideHandle(mouseX, mouseY);
 			if (handleIndex >= 0) {
 				selectedBoxFlag = true;
@@ -167,7 +198,7 @@
 		}
 
 		// Check if the mouse is inside a box
-		for (const [i, box] of value.boxes.entries()) {
+		for (const [i, box] of _boxes.entries()) {
 			if (box.isPointInsideBox(mouseX, mouseY)) {
 				selectedBoxFlag = true;
 				selectBox(i);
@@ -186,7 +217,7 @@
 	}
 
 	function handlePointerUp(event: PointerEvent) {
-		dispatch("change");
+		dispatchChangeDeferred();
 	}
 
 	function handlePointerMove(event: PointerEvent) {
@@ -202,7 +233,7 @@
 		const mouseX = event.clientX - rect.left;
 		const mouseY = event.clientY - rect.top;
 
-		for (const [_, box] of value.boxes.entries()) {
+		for (const [_, box] of _boxes.entries()) {
 			const handleIndex = box.indexOfPointInsideHandle(mouseX, mouseY);
 			if (handleIndex >= 0) {
 				canvas.style.cursor = box.resizeHandles[handleIndex].cursor;
@@ -284,13 +315,13 @@
         if (choicesColors.length > 0) {
             color = colorHexToRGB(choicesColors[0]);
         } else if (singleBox) {
-            if (value.boxes.length > 0) {
-                color = value.boxes[0].color;
+            if (_boxes.length > 0) {
+                color = _boxes[0].color;
             } else {
                 color = Colors[0];
             }
         } else {
-            color = Colors[value.boxes.length % Colors.length];
+            color = Colors[_boxes.length % Colors.length];
         }
 
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -324,17 +355,17 @@
             scaleFactor
         );
         box.startCreating(event, rect.left, rect.top);
-        // Defer binding update to next frame to avoid effect_update_depth_exceeded when
-        // the app has blocks.load() handlers (Gradio 6 reactive graph depth).
         requestAnimationFrame(() => {
-            if (singleBox) {
-                value.boxes = [box];
-            } else {
-                value.boxes = [box, ...value.boxes];
-            }
-            selectBox(0);
-            draw();
-            dispatch("change");
+            requestAnimationFrame(() => {
+                if (singleBox) {
+                    _boxes = [box];
+                } else {
+                    _boxes = [box, ..._boxes];
+                }
+                selectBox(0);
+                draw();
+                dispatchChangeDeferred();
+            });
         });
     }
 
@@ -349,14 +380,22 @@
 	}
 
 	function onBoxFinishCreation() {
-		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
-			if (value.boxes[selectedBox].getArea() < 1) {
+		if (selectedBox >= 0 && selectedBox < _boxes.length) {
+			if (_boxes[selectedBox].getArea() < 1) {
 				onDeleteBox();
 			} else {
 				if (!disableEditBoxes) {
 					if (labelDetailLock) {
 						onUseDefaultLabelModalNew();
 					} else{
+						// Write label/color synchronously before the visibility flag so
+						// they are all batched in the same effect-depth-0 flush, avoiding
+						// the cascade that occurs when $: blocks write reactive signals
+						// inside an already-running flush_effects cycle.
+						// Set mounted=true on first use so the ModalBox's Gradio sub-
+						// components are only registered after Gradio's startup settling.
+						newModalCurrentLabel = _boxes[selectedBox].label;
+						newModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
 						newModalVisible = true;
 					}
 				}
@@ -368,7 +407,10 @@
 	}
 
 	function onEditBox() {
-		if (selectedBox >= 0 && selectedBox < value.boxes.length && !disableEditBoxes) {
+		if (selectedBox >= 0 && selectedBox < _boxes.length && !disableEditBoxes) {
+			// Same pattern: write label/color before the visibility flag.
+			editModalCurrentLabel = _boxes[selectedBox].label;
+			editModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
 			editModalVisible = true;
 		}
 	}
@@ -388,16 +430,16 @@
 		let label = detail.label;
 		let color = detail.color;
 		let ret = detail.ret;
-		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
-			let box = value.boxes[selectedBox];
-			if (ret == 1) {
-				box.label = label;
-				box.color = colorHexToRGB(color);
-				draw();
-				dispatch("change");
-			} else if (ret == -1) {
-				onDeleteBox();
-			}
+		if (selectedBox >= 0 && selectedBox < _boxes.length) {
+			let box = _boxes[selectedBox];
+		if (ret == 1) {
+			box.label = label;
+			box.color = colorHexToRGB(color);
+			draw();
+			dispatchChangeDeferred();
+		} else if (ret == -1) {
+			onDeleteBox();
+		}
 		}
 	}
 
@@ -409,19 +451,19 @@
 		let color = detail.color;
 		let ret = detail.ret;
 		let lock = detail.lock;
-		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
-			let box = value.boxes[selectedBox];
-			if (ret == 1) {
-				labelDetailLock = lock;
-				defaultLabelCache.label = label;
-				defaultLabelCache.color = color;
-				box.label = label;
-				box.color = colorHexToRGB(color);
-				draw();
-				dispatch("change");
-			} else {
-				onDeleteBox();
-			}
+		if (selectedBox >= 0 && selectedBox < _boxes.length) {
+			let box = _boxes[selectedBox];
+		if (ret == 1) {
+			labelDetailLock = lock;
+			defaultLabelCache.label = label;
+			defaultLabelCache.color = color;
+			box.label = label;
+			box.color = colorHexToRGB(color);
+			draw();
+			dispatchChangeDeferred();
+		} else {
+			onDeleteBox();
+		}
 		}
 	}
 
@@ -441,25 +483,25 @@
 	}
 
 	function onUseDefaultLabelModalNew(){
-		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
-			let box = value.boxes[selectedBox];
+		if (selectedBox >= 0 && selectedBox < _boxes.length) {
+			let box = _boxes[selectedBox];
 			box.label = defaultLabelCache.label;
 			if (defaultLabelCache.color !== "") {
 				box.color = colorHexToRGB(defaultLabelCache.color);
 			}
 			draw();
-			dispatch("change");
+			dispatchChangeDeferred();
 		}
 	}
 
     function onDeleteBox() {
-		if (selectedBox >= 0 && selectedBox < value.boxes.length) {
-			value.boxes.splice(selectedBox, 1);
+		if (selectedBox >= 0 && selectedBox < _boxes.length) {
+			_boxes.splice(selectedBox, 1);
 			selectBox(-1);
 			if (singleBox) {
 				setCreateMode();
 			}
-			dispatch("change");
+			dispatchChangeDeferred();
 		}
 	}
 	
@@ -468,18 +510,21 @@
 	 * @param op 1: rotate clockwise, -1: rotate counterclockwise
 	 */
 	function onRotateImage(op: number) {
-		value.orientation = (((value.orientation + op) % 4) + 4 ) % 4;
-		canvasWindow.orientation = value.orientation;
+		_internal.orientation = (((_internal.orientation + op) % 4) + 4 ) % 4;
+		canvasWindow.orientation = _internal.orientation;
 
-		resize();
-		for (const box of value.boxes) {
+		for (const box of _boxes) {
 			box.onRotate(op);
 		}
+		resize(true, true);
 		draw();
 	}
 
-	function resize(dispatchChange = true) {
+	function resize(dispatchChange = true, fromRotation = false) {
 		if (canvas) {
+			const oldDisplayWidth = canvasWindow.imageWidth;
+			const oldDisplayHeight = canvasWindow.imageHeight;
+
 			scaleFactor = 1;
 			canvas.width = canvas.clientWidth;
 
@@ -519,125 +564,142 @@
 			
 			canvasWindow.resize(canvas.width, canvas.height, canvasXmin, canvasYmin);
 
-			if (canvasXmax > 0 && canvasYmax > 0){
-				for (const box of value.boxes) {
-					box.canvasXmin = canvasXmin;
-					box.canvasYmin = canvasYmin;
-					box.canvasXmax = canvasXmax;
-					box.canvasYmax = canvasYmax;
+		if (canvasXmax > 0 && canvasYmax > 0) {
+			for (const box of _boxes) {
+				box.canvasXmin = canvasXmin;
+				box.canvasYmin = canvasYmin;
+				box.canvasXmax = canvasXmax;
+				box.canvasYmax = canvasYmax;
+				if (fromRotation && oldDisplayWidth > 0 && oldDisplayHeight > 0) {
+					// Boxes were transformed by onRotate into (oldDisplayHeight, oldDisplayWidth) space;
+					// scale them into the new display (imageWidth, imageHeight) with correct aspect.
+					const scaleX = imageWidth / oldDisplayHeight;
+					const scaleY = imageHeight / oldDisplayWidth;
+					box.scaleFromRotatedDisplay(scaleX, scaleY);
+					box.scaleFactor = scaleFactor;
+					box.applyUserScale();
+				} else {
 					box.setScaleFactor(scaleFactor);
 				}
 			}
+		}
 			draw();
-			if (dispatchChange) dispatch("change");
+			if (dispatchChange) dispatchChangeDeferred();
 		}
 	}
 	const observer = new ResizeObserver(() => resize());
 
+	/** Convert value.boxes (plain data from Gradio) into Box instances stored in _boxes.
+	 *  Never writes Box instances back to value.boxes — keeping Box instances out of
+	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
         if (value === null || !Array.isArray(value.boxes)) {
-            if (value !== null) value.boxes = [];
+            _boxes = [];
             return;
         }
 
-        let needsArrayReplacement = false;
-        const updatedBoxes = [];
+        const newBoxes: Box[] = [];
 
         for (let i = 0; i < value.boxes.length; i++) {
-            let boxData = value.boxes[i];
+            const boxData = value.boxes[i];
 
-            if (boxData instanceof Box) {
-                boxData.canvasXmin = canvasXmin;
-                boxData.canvasYmin = canvasYmin;
-                boxData.canvasXmax = canvasXmax;
-                boxData.canvasYmax = canvasYmax;
-                updatedBoxes.push(boxData);
-
-            } else if (boxData && typeof boxData === 'object') {
-                needsArrayReplacement = true;
+            if (boxData && typeof boxData === 'object') {
                 let color = "";
                 let label = "";
                 let id = "";
                 let text = "";
+				let page = 0;
 
-                 if (boxData.hasOwnProperty("color")) {
-                     color = boxData["color"];
-                     if (Array.isArray(color) && color.length === 3) {
-                         color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-                     }
-                 } else {
-                     color = Colors[i % Colors.length];
-                 }
-                 if (boxData.hasOwnProperty("label")) {
-                     label = boxData["label"];
-                 }
-                 if (boxData.hasOwnProperty("id")) {
-                     id = boxData["id"];
-                 }
-				 else {
-					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-					let newBoxId = '';
-					for (let i = 0; i < 12; i++) {
-						newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
-					}
-					id = newBoxId
-				 }
-                 if (boxData.hasOwnProperty("text")) {
-                     text = boxData["text"];
-                 }
+                if (boxData.hasOwnProperty("color")) {
+                    color = boxData["color"];
+                    if (Array.isArray(color) && color.length === 3) {
+                        color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                    }
+                } else {
+                    color = Colors[i % Colors.length];
+                }
+                if (boxData.hasOwnProperty("label")) {
+                    label = boxData["label"];
+                }
+                if (boxData.hasOwnProperty("id")) {
+                    id = boxData["id"];
+                } else {
+                    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    let newBoxId = '';
+                    for (let j = 0; j < 12; j++) {
+                        newBoxId += characters.charAt(Math.floor(Math.random() * characters.length));
+                    }
+                    id = newBoxId;
+                }
+                if (boxData.hasOwnProperty("text")) {
+                    text = boxData["text"];
+                }
+				if (boxData.hasOwnProperty("page")) {
+                    page = boxData["page"];
+                }
 
-                 const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0;
-                 const ymin = boxData.hasOwnProperty("ymin") ? boxData["ymin"] : 0;
-                 const xmax = boxData.hasOwnProperty("xmax") ? boxData["xmax"] : 0;
-                 const ymax = boxData.hasOwnProperty("ymax") ? boxData["ymax"] : 0;
-                 const backendScaleFactor = boxData.hasOwnProperty("scaleFactor") ? boxData["scaleFactor"] : 1;
+                const xmin = boxData.hasOwnProperty("xmin") ? boxData["xmin"] : 0;
+                const ymin = boxData.hasOwnProperty("ymin") ? boxData["ymin"] : 0;
+                const xmax = boxData.hasOwnProperty("xmax") ? boxData["xmax"] : 0;
+                const ymax = boxData.hasOwnProperty("ymax") ? boxData["ymax"] : 0;
+                const backendScaleFactor = boxData.hasOwnProperty("scaleFactor") ? boxData["scaleFactor"] : 1;
 
-                 let boxInstance = new Box(
-                     draw,
-                     onBoxFinishCreation,
-                     canvasWindow,
-                     canvasXmin,
-                     canvasYmin,
-                     canvasXmax,
-                     canvasYmax,
-                     label,
-                     xmin,
-                     ymin,
-                     xmax,
-                     ymax,
-                     color,
-                     boxAlpha,
-					 id,
-                     text,
-                     boxMinSize,
-                     handleSize,
-                     boxThickness,
-                     boxSelectedThickness                     
-                 );
-                 boxInstance.setScaleFactor(backendScaleFactor);
-                 boxInstance.applyUserScale();
+                const boxInstance = new Box(
+                    draw,
+                    onBoxFinishCreation,
+                    canvasWindow,
+                    canvasXmin,
+                    canvasYmin,
+                    canvasXmax,
+                    canvasYmax,
+                    label,
+                    xmin,
+                    ymin,
+                    xmax,
+                    ymax,
+                    color,
+                    boxAlpha,
+                    id,
+                    text,
+					page,
+                    boxMinSize,
+                    handleSize,
+                    boxThickness,
+                    boxSelectedThickness
+                );
+                boxInstance.setScaleFactor(backendScaleFactor);
+                boxInstance.applyUserScale();
 
-                updatedBoxes.push(boxInstance);
-
+                newBoxes.push(boxInstance);
             } else {
                 console.error("Invalid box data format encountered:", boxData);
             }
         }
 
-        if (needsArrayReplacement && value !== null) {
-            value.boxes = updatedBoxes;
-        }
+        _boxes = newBoxes;
     }
 
-	let _lastProcessedValue = null;
+	// Plain object container so property mutations are invisible to Svelte 5's
+	// reactive proxy tracking, preventing the $: block from scheduling a self-re-run.
+	const _lastProcessed = { value: null as typeof value };
 	$: {
 		const currentValue = value;
-		if (currentValue !== _lastProcessedValue) {
-			_lastProcessedValue = currentValue;
-			setImage();
-			parseInputBoxes();
-			resize(false);
-			draw();
+		if (currentValue !== _lastProcessed.value) {
+			_lastProcessed.value = currentValue;
+			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
+			_internal.orientation = (currentValue !== null ? currentValue.orientation : 0) ?? 0;
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					canvasWindow.orientation = _internal.orientation;
+					setImage();
+					parseInputBoxes();
+					if (selectedBox < 0 && _boxes.length > 0) {
+						selectBox(0);
+					}
+					resize(false);
+					draw();
+				});
+			});
 		}
 	}
 
@@ -669,7 +731,9 @@
 		ctx = canvas.getContext("2d");
 		observer.observe(canvas);
 
-		if (selectedBox < 0 && value !== null && value.boxes.length > 0) {
+		// _boxes is populated by the $: block's RAF. At mount time it will be empty,
+		// so the RAF will handle initial selection once parseInputBoxes() runs.
+		if (selectedBox < 0 && _boxes.length > 0) {
 			selectBox(0);
 		}
 		setImage();
@@ -718,7 +782,7 @@
 					class="icon"
 					aria-label="Edit label"
 					title="Edit label"
-					on:click={() => editDefaultLabelVisible = true}><Label/></button
+					on:click={() => { defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
 				>
 			{/if}
 			<button
@@ -772,66 +836,67 @@
 					on:click={() => onDeleteBox()}><Trash/></button
 				>
 			{/if}
-			{#if !disableEditBoxes && labelDetailLock}
-				<button
-					class="icon"
-					aria-label="Edit label"
-					title="Edit label"
-					on:click={() => editDefaultLabelVisible = true}><Label/></button
-				>
-			{/if}
+		{#if !disableEditBoxes && labelDetailLock}
 			<button
 				class="icon"
-				aria-label="Rotate counterclockwise"
-				title="Rotate counterclockwise"
-				on:click={() => onRotateImage(-1)}><Undo/></button
-			>
-			<button
-				class="icon"
-				aria-label="Rotate clockwise"
-				title="Rotate clockwise"
-				on:click={() => onRotateImage(1)}><Redo/></button
-			>
-		</span>
+				aria-label="Edit label"
+				title="Edit label"
+		on:click={() => { defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
+		>
 	{/if}
+	<button
+		class="icon"
+		aria-label="Rotate counterclockwise"
+		title="Rotate counterclockwise"
+		on:click={() => onRotateImage(-1)}><Undo/></button
+	>
+	<button
+		class="icon"
+		aria-label="Rotate clockwise"
+		title="Rotate clockwise"
+		on:click={() => onRotateImage(1)}><Redo/></button
+	>
+</span>
+{/if}
 </div>
 
-{#if editModalVisible}
-	<ModalBox
-		on:change={onModalEditChange}
-		on:enter{onModalEditChange}
-		choices={choices}
-		choicesColors={choicesColors}
-		label={selectedBox >= 0 && selectedBox < value.boxes.length ? value.boxes[selectedBox].label : ""}
-		color={selectedBox >= 0 && selectedBox < value.boxes.length ? colorRGBAToHex(value.boxes[selectedBox].color) : ""}
-	/>
-{/if}
+<!-- ModalBox uses only plain HTML elements (no Gradio sub-components), so it
+     adds zero entries to the Gradio registry and does not contribute to the
+     flush_effects depth.  All three instances are always mounted; visibility is
+     toggled via the `visible` prop (CSS display). -->
+<ModalBox
+	visible={editModalVisible}
+	bind:currentLabel={editModalCurrentLabel}
+	bind:currentColor={editModalCurrentColor}
+	on:change={onModalEditChange}
+	on:enter{onModalEditChange}
+	choices={choices}
+	choicesColors={choicesColors}
+/>
 
-{#if newModalVisible}
-	<ModalBox
-		on:change={onModalNewChange}
-		on:enter{onModalNewChange}
-		choices={choices}
-		showRemove={false}
-		choicesColors={choicesColors}
-		label={selectedBox >= 0 && selectedBox < value.boxes.length ? value.boxes[selectedBox].label : ""}
-		color={selectedBox >= 0 && selectedBox < value.boxes.length ? colorRGBAToHex(value.boxes[selectedBox].color) : ""}
-		labelDetailLock = {labelDetailLock}
-	/>
-{/if}
+<ModalBox
+	visible={newModalVisible}
+	bind:currentLabel={newModalCurrentLabel}
+	bind:currentColor={newModalCurrentColor}
+	on:change={onModalNewChange}
+	on:enter{onModalNewChange}
+	choices={choices}
+	showRemove={false}
+	choicesColors={choicesColors}
+	labelDetailLock={labelDetailLock}
+/>
 
-{#if editDefaultLabelVisible}
-	<ModalBox
-		on:change={onDefaultLabelEditChange}
-		on:enter{onDefaultLabelEditChange}
-		choices={choices}
-		showRemove={false}
-		choicesColors={choicesColors}
-		label={selectedBox >= 0 && selectedBox < value.boxes.length ? value.boxes[selectedBox].label : ""}
-		color={selectedBox >= 0 && selectedBox < value.boxes.length ? colorRGBAToHex(value.boxes[selectedBox].color) : ""}
-		labelDetailLock = {labelDetailLock}
-	/>
-{/if}
+<ModalBox
+	visible={editDefaultLabelVisible}
+	bind:currentLabel={defaultModalCurrentLabel}
+	bind:currentColor={defaultModalCurrentColor}
+	on:change={onDefaultLabelEditChange}
+	on:enter{onDefaultLabelEditChange}
+	choices={choices}
+	showRemove={false}
+	choicesColors={choicesColors}
+	labelDetailLock={labelDetailLock}
+/>
 
 <style>
 	.canvas-annotator {
