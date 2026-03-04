@@ -9118,7 +9118,7 @@ class wn {
       }
     }, this.stopResize = () => {
       this.isResizing = !1, document.removeEventListener("pointermove", this.handleResize), document.removeEventListener("pointerup", this.stopResize);
-    }, this.renderCallBack = t, this.onFinishCreation = n, this.canvasWindow = i, this.canvasXmin = a, this.canvasYmin = s, this.canvasXmax = o, this.canvasYmax = l, this.scaleFactor = w, this.label = u, this.isDragging = !1, this.isCreating = !1, this._xmin = d, this._ymin = h, this._xmax = _, this._ymax = v, this.xmin = this._xmin * this.canvasWindow.scale, this.ymin = this._ymin * this.canvasWindow.scale, this.xmax = this._xmax * this.canvasWindow.scale, this.ymax = this._ymax * this.canvasWindow.scale, this.isResizing = !1, this.isSelected = !1, this.offsetMouseX = 0, this.offsetMouseY = 0, this.resizeHandleSize = p, this.thickness = g, this.selectedThickness = f, this.updateHandles(), this.resizingHandleIndex = -1, this.minSize = c, this.color = E, this.alpha = L, this.creatingAnchorX = "xmin", this.creatingAnchorY = "ymin", this.id = A, this.text = C, this.page = T;
+    }, this.renderCallBack = t, this.onFinishCreation = n, this.canvasWindow = i, this.canvasXmin = a, this.canvasYmin = s, this.canvasXmax = o, this.canvasYmax = l, this.scaleFactor = w, this.label = u, this.isDragging = !1, this.isCreating = !1, this._xmin = d, this._ymin = h, this._xmax = _, this._ymax = v, this.xmin = this._xmin * this.canvasWindow.scale, this.ymin = this._ymin * this.canvasWindow.scale, this.xmax = this._xmax * this.canvasWindow.scale, this.ymax = this._ymax * this.canvasWindow.scale, this.isResizing = !1, this.isSelected = !1, this.offsetMouseX = 0, this.offsetMouseY = 0, this.resizeHandleSize = p ?? 8, this.thickness = g, this.selectedThickness = f, this.updateHandles(), this.resizingHandleIndex = -1, this.minSize = c, this.color = E, this.alpha = L, this.creatingAnchorX = "xmin", this.creatingAnchorY = "ymin", this.id = A, this.text = C, this.page = T;
   }
   toJSON() {
     return {
@@ -9153,7 +9153,7 @@ class wn {
     this._xmin = Math.round(this._xmin * t), this._xmax = Math.round(this._xmax * t), this._ymin = Math.round(this._ymin * n), this._ymax = Math.round(this._ymax * n);
   }
   updateHandles() {
-    const t = this.resizeHandleSize / 2 * this.canvasWindow.scale, n = this.getWidth(), i = this.getHeight();
+    const t = this.resizeHandleSize / 2, n = this.getWidth(), i = this.getHeight();
     this.resizeHandles = [
       {
         // Top left
@@ -10381,7 +10381,7 @@ function wu(r, t) {
   (function(y) {
     y[y.creation = 0] = "creation", y[y.drag = 1] = "drag";
   })(e.safe_get(a) || e.set(a, {}));
-  let s = e.prop(t, "imageUrl", 8, null), o = e.prop(t, "interactive", 8), l = e.prop(t, "boxAlpha", 8, 0.5), u = e.prop(t, "boxMinSize", 8, 10), d = e.prop(t, "handleSize", 8), h = e.prop(t, "boxThickness", 8), _ = e.prop(t, "boxSelectedThickness", 8), v = e.prop(t, "value", 8), E = e.prop(t, "choices", 24, () => []), L = e.prop(t, "choicesColors", 24, () => []), A = e.prop(t, "disableEditBoxes", 8, !1), C = e.prop(t, "singleBox", 8, !1), T = e.prop(t, "showRemoveButton", 12, null), c = e.prop(t, "handlesCursor", 8, !0), p = e.prop(t, "useDefaultLabel", 8, !1), g = e.prop(t, "enableKeyboardShortcuts", 8, !0);
+  let s = e.prop(t, "imageUrl", 8, null), o = e.prop(t, "interactive", 8), l = e.prop(t, "boxAlpha", 8, 0.5), u = e.prop(t, "boxMinSize", 8, 10), d = e.prop(t, "handleSize", 8, 8), h = e.prop(t, "boxThickness", 8), _ = e.prop(t, "boxSelectedThickness", 8), v = e.prop(t, "value", 8), E = e.prop(t, "choices", 24, () => []), L = e.prop(t, "choicesColors", 24, () => []), A = e.prop(t, "disableEditBoxes", 8, !1), C = e.prop(t, "singleBox", 8, !1), T = e.prop(t, "showRemoveButton", 12, null), c = e.prop(t, "handlesCursor", 8, !0), p = e.prop(t, "useDefaultLabel", 8, !1), g = e.prop(t, "enableKeyboardShortcuts", 8, !0);
   T() === null && T(A());
   let f = e.mutable_source(), w = e.mutable_source(), x, b = null, m = e.mutable_source(-1), F = e.mutable_source(e.safe_get(a).drag), D = e.mutable_source(new Dl($)), I = e.mutable_source([]);
   v() !== null && v().boxes.length == 0 && e.set(F, e.safe_get(a).creation);

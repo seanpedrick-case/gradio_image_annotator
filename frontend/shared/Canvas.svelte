@@ -14,7 +14,7 @@
 	export let interactive: boolean;
 	export let boxAlpha = 0.5;
 	export let boxMinSize = 10;
-	export let handleSize: number;
+	export let handleSize: number = 8;
 	export let boxThickness: number;
 	export let boxSelectedThickness: number;
 	export let value: null | AnnotatedImageData;

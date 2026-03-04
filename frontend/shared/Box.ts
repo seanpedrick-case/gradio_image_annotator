@@ -106,7 +106,7 @@ export default class Box {
         this.isSelected = false;
         this.offsetMouseX = 0;
         this.offsetMouseY = 0;
-        this.resizeHandleSize = handleSize;
+        this.resizeHandleSize = handleSize ?? 8;
         this.thickness = thickness;
         this.selectedThickness = selectedThickness;
         this.updateHandles();
@@ -166,10 +166,9 @@ export default class Box {
     }
 
     updateHandles(): void {
-        // Scale handle size by canvas zoom so handles have consistent screen size for both
-        // newly created and pre-existing boxes (existing boxes get updateOffset/applyUserScale
-        // on load; new boxes may not be fully synced until first render).
-        const halfSize = (this.resizeHandleSize / 2) * this.canvasWindow.scale;
+        // Use a fixed screen-pixel half-size so handles are always exactly
+        // `resizeHandleSize` pixels wide regardless of zoom or image scale.
+        const halfSize = this.resizeHandleSize / 2;
         const width = this.getWidth();
         const height = this.getHeight();
         this.resizeHandles = [
