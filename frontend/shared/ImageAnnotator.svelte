@@ -14,7 +14,7 @@
 
 	type source_type = "upload" | "webcam" | "clipboard" | null;
 
-	export let value: null | AnnotatedImageData;
+	export let value: null | AnnotatedImageData = null;
 	export let label: string | undefined = undefined;
 	export let show_label: boolean;
 	export let sources: source_type[] = ["upload", "webcam", "clipboard"];
@@ -105,7 +105,7 @@
 <BlockLabel {show_label} Icon={ImageIcon} label={label || "Image Annotator"} />
 
 <div class="icon-buttons">
-	{#if showDownloadButton && value !== null}
+	{#if showDownloadButton && value?.image}
 		<DownloadLink href={value.image.url} download={value.image.orig_name || "image"}>
 			<IconButton Icon={Download} label={i18n("common.download")} />
 		</DownloadLink>
@@ -116,7 +116,7 @@
 			on:share
 			on:error
 			formatter={async (value) => {
-				if (value === null) return "";
+				if (!value?.image) return "";
 				let url = await uploadToHuggingFace(value.image, "base64");
 				return `<img src="${url}" />`;
 			}}
@@ -187,7 +187,7 @@
 					{boxSelectedThickness}
 					{useDefaultLabel}
 					{enableKeyboardShortcuts}
-					src={value.image.url}
+					src={value?.image?.url}
 				/>
 			</div>
 		{/if}

@@ -78,20 +78,11 @@ def crop(annotations:dict):
         ]
     return None
 
-def test_print(text:str):
-    print(text)
-
-
 def get_boxes_json(annotations):
     return annotations["boxes"]
 
 
 with gr.Blocks() as demo:
-    ### NON-VISIBLE COMPONENTS
-    default_textbox = gr.Textbox(
-        label="Default textbox", value="123456", visible=False
-    )
-
     with gr.Tab("Object annotation", id="tab_object_annotation"):
         
         annotator = image_annotator(
@@ -104,7 +95,6 @@ with gr.Blocks() as demo:
         button_get.click(get_boxes_json, annotator, json_boxes)
 
     with gr.Tab("Crop", id="tab_crop"):
-        print("Second tab")
         with gr.Row():
             annotator_crop = image_annotator(
                 examples_crop[0],
@@ -128,13 +118,6 @@ with gr.Blocks() as demo:
         - ``Enter``: Confirm modal dialog
         - ``Escape``: Cancel/close modal dialog
         """)
-
-    ### FUNCTIONS
-    demo.load(
-        test_print,
-        inputs=[default_textbox],
-        outputs=None,
-    )
 
 if __name__ == "__main__":
     demo.launch()
@@ -160,11 +143,11 @@ if __name__ == "__main__":
 <td align="left" style="width: 25%;">
 
 ```python
-dict| None
+dict | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">A dict or None. The dictionary must contain a key 'image' with either an URL to an image, a numpy image or a PIL image. Optionally it may contain a key 'boxes' with a list of boxes. Each box must be a dict wit the keys: 'xmin', 'ymin', 'xmax' and 'ymax' with the absolute image coordinates of the box. Optionally can also include the keys 'label' and 'color' describing the label and color of the box. Color must be a tuple of RGB values (e.g. `(255,255,255)`). Optionally can also include the keys 'orientation' with a integer between 0 and 3, describing the number of times the image is rotated by 90 degrees in frontend, the rotation is clockwise.</td>
 </tr>
 
@@ -173,11 +156,11 @@ dict| None
 <td align="left" style="width: 25%;">
 
 ```python
-float| None
+float | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Opacity of the bounding boxes 0 and 1.</td>
 </tr>
 
@@ -186,11 +169,11 @@ float| None
 <td align="left" style="width: 25%;">
 
 ```python
-list[str]| None
+list[str] | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">List of valid labels.</td>
 </tr>
 
@@ -199,11 +182,11 @@ list[str]| None
 <td align="left" style="width: 25%;">
 
 ```python
-list[str]| None
+list[str] | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Optional list of colors for each label when `label_list` is used. Colors must be a tuple of RGB values (e.g. `(255,255,255)`).</td>
 </tr>
 
@@ -212,11 +195,11 @@ list[str]| None
 <td align="left" style="width: 25%;">
 
 ```python
-int| None
+int | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Minimum valid bounding box size.</td>
 </tr>
 
@@ -225,11 +208,11 @@ int| None
 <td align="left" style="width: 25%;">
 
 ```python
-int| None
+int | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Size of the bounding box resize handles.</td>
 </tr>
 
@@ -238,11 +221,11 @@ int| None
 <td align="left" style="width: 25%;">
 
 ```python
-int| None
+int | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Thickness of the bounding box outline.</td>
 </tr>
 
@@ -251,11 +234,11 @@ int| None
 <td align="left" style="width: 25%;">
 
 ```python
-int| None
+int | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Thickness of the bounding box outline when it is selected.</td>
 </tr>
 
@@ -264,11 +247,11 @@ int| None
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">Disables the ability to set and edit the label and color of the boxes.</td>
 </tr>
 
@@ -281,7 +264,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = False</code></td>
+<td align="left"><code>False</code></td>
 <td align="left">If True, at most one box can be drawn.</td>
 </tr>
 
@@ -290,11 +273,11 @@ bool
 <td align="left" style="width: 25%;">
 
 ```python
-int| str| None
+int | str | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">The height of the displayed image, specified in pixels if a number is passed, or in CSS units if a string is passed.</td>
 </tr>
 
@@ -303,11 +286,11 @@ int| str| None
 <td align="left" style="width: 25%;">
 
 ```python
-int| str| None
+int | str | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">The width of the displayed image, specified in pixels if a number is passed, or in CSS units if a string is passed.</td>
 </tr>
 
@@ -316,11 +299,21 @@ int| str| None
 <td align="left" style="width: 25%;">
 
 ```python
-"1"| "L"| "P"| "RGB"| "RGBA"| "CMYK"| "YCbCr"| "LAB"| "HSV"| "I"| "F"
+"1"
+    | "L"
+    | "P"
+    | "RGB"
+    | "RGBA"
+    | "CMYK"
+    | "YCbCr"
+    | "LAB"
+    | "HSV"
+    | "I"
+    | "F"
 ```
 
 </td>
-<td align="left"><code>value = "RGB"</code></td>
+<td align="left"><code>"RGB"</code></td>
 <td align="left">"RGB" if color, or "L" if black and white. See https://pillow.readthedocs.io/en/stable/handbook/concepts.html for other supported image modes and their meaning.</td>
 </tr>
 
@@ -329,11 +322,11 @@ int| str| None
 <td align="left" style="width: 25%;">
 
 ```python
-list["upload"| "webcam"| "clipboard"]| None
+list["upload" | "webcam" | "clipboard"] | None
 ```
 
 </td>
-<td align="left"><code>value = ['upload', 'webcam', 'clipboard']</code></td>
+<td align="left"><code>["upload", "webcam", "clipboard"]</code></td>
 <td align="left">List of sources for the image. "upload" creates a box where user can drop an image file, "webcam" allows user to take snapshot from their webcam, "clipboard" allows users to paste an image from the clipboard. If None, defaults to ["upload", "webcam", "clipboard"].</td>
 </tr>
 
@@ -342,11 +335,11 @@ list["upload"| "webcam"| "clipboard"]| None
 <td align="left" style="width: 25%;">
 
 ```python
-"numpy"| "pil"| "filepath"
+"numpy" | "pil" | "filepath"
 ```
 
 </td>
-<td align="left"><code>value = "numpy"</code></td>
+<td align="left"><code>"numpy"</code></td>
 <td align="left">The format the image is converted before being passed into the prediction function. "numpy" converts the image to a numpy array with shape (height, width, 3) and values from 0 to 255, "pil" converts the image to a PIL image object, "filepath" passes a str path to a temporary file containing the image. If the image is SVG, the `type` is ignored and the filepath of the SVG is returned.</td>
 </tr>
 
@@ -355,11 +348,11 @@ list["upload"| "webcam"| "clipboard"]| None
 <td align="left" style="width: 25%;">
 
 ```python
-str| None
+str | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.</td>
 </tr>
 
@@ -372,7 +365,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If True, will place the component in a container - providing some extra padding around the border.</td>
 </tr>
 
@@ -381,11 +374,11 @@ bool
 <td align="left" style="width: 25%;">
 
 ```python
-int| None
+int | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">relative size compared to adjacent Components. For example if Components A and B are in a Row, and A has scale=2, and B has scale=1, A will be twice as wide as B. Should be an integer. scale applies in Rows, and to top-level Components in Blocks where fill_height=True.</td>
 </tr>
 
@@ -398,7 +391,7 @@ int
 ```
 
 </td>
-<td align="left"><code>value = 160</code></td>
+<td align="left"><code>160</code></td>
 <td align="left">minimum pixel width, will wrap if not sufficient screen space to satisfy this value. If a certain scale value results in this Component being narrower than min_width, the min_width parameter will be respected first.</td>
 </tr>
 
@@ -407,11 +400,11 @@ int
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">if True, will allow users to upload and annotate an image; if False, can only be used to display annotated images.</td>
 </tr>
 
@@ -424,7 +417,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If False, component will be hidden.</td>
 </tr>
 
@@ -433,11 +426,11 @@ bool
 <td align="left" style="width: 25%;">
 
 ```python
-str| None
+str | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">An optional string that is assigned as the id of this component in the HTML DOM. Can be used for targeting CSS styles.</td>
 </tr>
 
@@ -446,11 +439,11 @@ str| None
 <td align="left" style="width: 25%;">
 
 ```python
-list[str]| str| None
+list[str] | str | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">An optional list of strings that are assigned as the classes of this component in the HTML DOM. Can be used for targeting CSS styles.</td>
 </tr>
 
@@ -463,7 +456,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If False, component will not render be rendered in the Blocks context. Should be used if the intention is to assign event listeners now but render the component later.</td>
 </tr>
 
@@ -472,11 +465,11 @@ bool
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">if True, will display label.</td>
 </tr>
 
@@ -489,7 +482,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If True, will show a button to download the image.</td>
 </tr>
 
@@ -498,11 +491,11 @@ bool
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">If True, will show a share icon in the corner of the component that allows user to share outputs to Hugging Face Spaces Discussions. If False, icon does not appear. If set to None (default behavior), then the icon appears if this Gradio app is launched on Spaces, but not otherwise.</td>
 </tr>
 
@@ -511,11 +504,11 @@ bool| None
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If True, will show a button to clear the current image.</td>
 </tr>
 
@@ -524,11 +517,11 @@ bool| None
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = None</code></td>
+<td align="left"><code>None</code></td>
 <td align="left">If True, will show a button to remove the selected bounding box.</td>
 </tr>
 
@@ -537,11 +530,11 @@ bool| None
 <td align="left" style="width: 25%;">
 
 ```python
-bool| None
+bool | None
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If True, the cursor will change when hovering over box handles in drag mode. Can be CPU-intensive.</td>
 </tr>
 
@@ -554,7 +547,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = False</code></td>
+<td align="left"><code>False</code></td>
 <td align="left">If True, the first item in label_list will be used as the default label when creating boxes.</td>
 </tr>
 
@@ -567,7 +560,7 @@ bool
 ```
 
 </td>
-<td align="left"><code>value = True</code></td>
+<td align="left"><code>True</code></td>
 <td align="left">If True, the component will respond to keyboard events.</td>
 </tr>
 </tbody></table>
@@ -597,8 +590,8 @@ The code snippet below is accurate in cases where the component is used as both 
 
  ```python
  def predict(
-     value: AnnotatedImageValue| None
- ) -> AnnotatedImageValue| None:
+     value: AnnotatedImageValue | None
+ ) -> AnnotatedImageValue | None:
      return value
  ```
  
@@ -609,5 +602,4 @@ class AnnotatedImageValue(TypedDict):
     image: Optional[np.ndarray | PIL.Image.Image | str]
     boxes: Optional[List[dict]]
     orientation: Optional[int]
-
 ```

@@ -63,20 +63,11 @@ def crop(annotations:dict):
         ]
     return None
 
-def test_print(text:str):
-    print(text)
-
-
 def get_boxes_json(annotations):
     return annotations["boxes"]
 
 
 with gr.Blocks() as demo:
-    ### NON-VISIBLE COMPONENTS
-    default_textbox = gr.Textbox(
-        label="Default textbox", value="123456", visible=False
-    )
-
     with gr.Tab("Object annotation", id="tab_object_annotation"):
         
         annotator = image_annotator(
@@ -89,7 +80,6 @@ with gr.Blocks() as demo:
         button_get.click(get_boxes_json, annotator, json_boxes)
 
     with gr.Tab("Crop", id="tab_crop"):
-        print("Second tab")
         with gr.Row():
             annotator_crop = image_annotator(
                 examples_crop[0],
@@ -113,13 +103,6 @@ with gr.Blocks() as demo:
         - ``Enter``: Confirm modal dialog
         - ``Escape``: Cancel/close modal dialog
         """)
-
-    ### FUNCTIONS
-    demo.load(
-        test_print,
-        inputs=[default_textbox],
-        outputs=None,
-    )
 
 if __name__ == "__main__":
     demo.launch()
