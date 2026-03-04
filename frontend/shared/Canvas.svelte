@@ -340,6 +340,18 @@
 		const x = (event.clientX - rect.left - canvasWindow.offsetX) / canvasWindow.scale;
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / canvasWindow.scale;
 
+		// Use same scaleFactor logic as resize(): canvas.clientWidth (current layout), not canvas.width
+		let currentScaleFactor = 1.0;
+		const canvasDisplayWidth = canvas ? canvas.clientWidth : 0;
+		if (image !== null && canvasDisplayWidth > 0 && image.width > 0) {
+			const rotatedWidth = (_internal.orientation === 0 || _internal.orientation === 2)
+				? image.width
+				: image.height;
+			if (rotatedWidth > canvasDisplayWidth) {
+				currentScaleFactor = canvasDisplayWidth / rotatedWidth;
+			}
+		}
+
 		let color;
         let defaultLabel: string;
 
@@ -390,7 +402,7 @@
             handleSize,
             boxThickness,
             boxSelectedThickness,
-            scaleFactor
+            currentScaleFactor
         );
         box.startCreating(event, rect.left, rect.top);
         requestAnimationFrame(() => {
@@ -399,6 +411,17 @@
                     _boxes = [box];
                 } else {
                     _boxes = [box, ..._boxes];
+                }
+                // Recompute and set scaleFactor after layout so it matches pre-existing boxes
+                // (assign only; do not call setScaleFactor() or coords would be rescaled)
+                const canvasDisplayWidth = canvas ? canvas.clientWidth : 0;
+                if (image !== null && canvasDisplayWidth > 0 && image.width > 0) {
+                    const rotatedWidth = (_internal.orientation === 0 || _internal.orientation === 2)
+                        ? image.width
+                        : image.height;
+                    if (rotatedWidth > canvasDisplayWidth) {
+                        box.scaleFactor = canvasDisplayWidth / rotatedWidth;
+                    }
                 }
                 selectBox(0);
                 draw();
