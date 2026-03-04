@@ -17,10 +17,29 @@
     export let showRemove = true;
     export let labelDetailLock = false;
 
-    // Unique ID so the <datalist> ID doesn't clash across the three ModalBox instances.
+    // Unique ID so label/color element IDs don't clash across the three ModalBox instances.
     const uid = Math.random().toString(36).slice(2, 8);
 
     const dispatch = createEventDispatcher<{ change: object }>();
+
+    /** Extract the label string from a choice entry (supports both string and [string, number] tuple). */
+    function labelOf(c: unknown): string {
+        if (typeof c === "string") return c;
+        if (Array.isArray(c) && c[0] != null) return String(c[0]);
+        return "";
+    }
+
+    /** Flat list of label strings for rendering. */
+    $: choiceLabels = Array.isArray(choices) ? choices.map(labelOf).filter(l => l !== "") : [];
+
+    // The input's displayed value. Cleared on focus so the datalist shows ALL options
+    // (browsers filter datalist by current text; empty = show all). Restored on blur if left empty.
+    let displayValue = currentLabel;
+    let savedLabel = "";
+    let isFocused = false;
+
+    // Sync display when the modal is opened with a new label (and the input is not being edited).
+    $: if (!isFocused) displayValue = currentLabel;
 
     function dispatchChange(ret: number) {
         dispatch("change", {
@@ -31,16 +50,33 @@
         });
     }
 
+    function syncColor(label: string) {
+        const idx = choiceLabels.indexOf(label);
+        if (idx >= 0 && Array.isArray(choicesColors) && idx < choicesColors.length) {
+            currentColor = choicesColors[idx];
+        }
+    }
+
+    function onLabelFocus() {
+        isFocused = true;
+        savedLabel = displayValue;
+        displayValue = ""; // clear so the datalist dropdown shows all options immediately
+    }
+
+    function onLabelBlur() {
+        isFocused = false;
+        if (displayValue === "") {
+            // User left the field empty — restore the previous label.
+            displayValue = savedLabel;
+            currentLabel = savedLabel;
+        }
+    }
+
     function onLabelInput(event: Event) {
         const value = (event.target as HTMLInputElement).value;
+        displayValue = value;
         currentLabel = value;
-        // When user picks a known choice, sync the associated color.
-        if (Array.isArray(choices)) {
-            const idx = choices.findIndex(([label]) => label === value);
-            if (idx >= 0 && Array.isArray(choicesColors) && idx < choicesColors.length) {
-                currentColor = choicesColors[idx];
-            }
-        }
+        syncColor(value);
     }
 
     function onColorInput(event: Event) {
@@ -48,7 +84,7 @@
     }
 
     function handleKeyPress(event: KeyboardEvent) {
-        if (!visible) return;
+        if (!visible || !event.key) return;
         switch (event.key.toLowerCase()) {
             case "enter": dispatchChange(1); break;
             case "escape": dispatchChange(0); break;
@@ -81,17 +117,23 @@
 
             <div class="field-wrap">
                 <label class="field-label" for="label-input-{uid}">Label</label>
+                <!-- Single combobox: click to see all choices in the dropdown, or type a custom label.
+                     The input is cleared on focus so the browser shows all datalist options immediately.
+                     If left empty on blur, the previous label is restored. -->
                 <input
                     id="label-input-{uid}"
                     class="label-input"
                     type="text"
                     list="label-choices-{uid}"
-                    value={currentLabel}
+                    value={displayValue}
+                    placeholder={isFocused ? "Type or pick from list…" : ""}
+                    on:focus={onLabelFocus}
+                    on:blur={onLabelBlur}
                     on:input={onLabelInput}
                     on:change={onLabelInput}
                 />
                 <datalist id="label-choices-{uid}">
-                    {#each choices as [label]}
+                    {#each choiceLabels as label}
                         <option value={label}>{label}</option>
                     {/each}
                 </datalist>
@@ -201,6 +243,7 @@
         border-color: var(--input-border-color-focus);
         box-shadow: var(--input-shadow-focus);
     }
+
 
     .color-wrap { align-items: flex-start; }
 

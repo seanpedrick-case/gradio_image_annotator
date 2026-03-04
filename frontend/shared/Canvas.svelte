@@ -112,6 +112,35 @@
 		const hex = "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
 		return hex;
 	}
+
+	/** Extract label from a choice: supports string or [label, value] tuple (backend may send either). */
+	function labelFromChoice(c: unknown): string {
+		return typeof c === "string" ? c : (Array.isArray(c) && c[0] != null ? String(c[0]) : "");
+	}
+
+	/** Choices + colors for the label dropdown: configured choices plus any label
+	 *  currently used by a box on the image (so the dropdown includes all current labels).
+	 *  Supports both backend formats: string[] (e.g. ["Person", "Vehicle"]) or
+	 *  [string, number][] (e.g. [["Person", 0], ["Vehicle", 1]]). */
+	function getMergedChoices(): { choices: [string, number][]; colors: string[] } {
+		const mergedChoices: [string, number][] = Array.isArray(choices)
+			? choices.map((c, i) => [labelFromChoice(c), i]).filter(([l]) => l !== "") as [string, number][]
+			: [];
+		const mergedColors: string[] = Array.isArray(choicesColors) ? [...choicesColors] : [];
+		const seen = new Set(mergedChoices.map(([l]) => l));
+		for (const box of _boxes) {
+			const label = (box.label || "").trim();
+			if (label !== "" && !seen.has(label)) {
+				seen.add(label);
+				mergedChoices.push([label, mergedChoices.length]);
+				mergedColors.push(colorRGBAToHex(box.color));
+			}
+		}
+		return { choices: mergedChoices, colors: mergedColors };
+	}
+
+	let modalChoices: [string, number][] = [];
+	let modalChoicesColors: string[] = [];
 	
     function draw() {
 		if (ctx) {
@@ -312,16 +341,25 @@
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / canvasWindow.scale;
 
 		let color;
-        if (choicesColors.length > 0) {
-            color = colorHexToRGB(choicesColors[0]);
-        } else if (singleBox) {
-            if (_boxes.length > 0) {
-                color = _boxes[0].color;
-            } else {
-                color = Colors[0];
-            }
+        let defaultLabel: string;
+
+        if (labelDetailLock && defaultLabelCache.label !== "") {
+            // Use the locked style so the box looks correct while being dragged out.
+            defaultLabel = defaultLabelCache.label;
+            color = defaultLabelCache.color !== ""
+                ? colorHexToRGB(defaultLabelCache.color)
+                : (choicesColors.length > 0 ? colorHexToRGB(choicesColors[0]) : Colors[0]);
         } else {
-            color = Colors[_boxes.length % Colors.length];
+            defaultLabel = (Array.isArray(choices) && choices.length > 0)
+                ? labelFromChoice(choices[0])
+                : "";
+            if (choicesColors.length > 0) {
+                color = colorHexToRGB(choicesColors[0]);
+            } else if (singleBox) {
+                color = _boxes.length > 0 ? _boxes[0].color : Colors[0];
+            } else {
+                color = Colors[_boxes.length % Colors.length];
+            }
         }
 
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -339,7 +377,7 @@
             canvasYmin,
             canvasXmax,
             canvasYmax,
-            "",
+            defaultLabel,
             x,
             y,
             x,
@@ -394,6 +432,9 @@
 						// inside an already-running flush_effects cycle.
 						// Set mounted=true on first use so the ModalBox's Gradio sub-
 						// components are only registered after Gradio's startup settling.
+						const m = getMergedChoices();
+						modalChoices = m.choices;
+						modalChoicesColors = m.colors;
 						newModalCurrentLabel = _boxes[selectedBox].label;
 						newModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
 						newModalVisible = true;
@@ -409,6 +450,9 @@
 	function onEditBox() {
 		if (selectedBox >= 0 && selectedBox < _boxes.length && !disableEditBoxes) {
 			// Same pattern: write label/color before the visibility flag.
+			const m = getMergedChoices();
+			modalChoices = m.choices;
+			modalChoicesColors = m.colors;
 			editModalCurrentLabel = _boxes[selectedBox].label;
 			editModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
 			editModalVisible = true;
@@ -724,7 +768,7 @@
 					choicesColors.push(colorRGBAToHex(color));
 				}
 			}
-			defaultLabelCache.label = choices[0][0]
+			defaultLabelCache.label = labelFromChoice(choices[0])
 			defaultLabelCache.color = choicesColors[0]
 		}
 
@@ -782,7 +826,7 @@
 					class="icon"
 					aria-label="Edit label"
 					title="Edit label"
-					on:click={() => { defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
+					on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
 				>
 			{/if}
 			<button
@@ -841,7 +885,7 @@
 				class="icon"
 				aria-label="Edit label"
 				title="Edit label"
-		on:click={() => { defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
+		on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
 		>
 	{/if}
 	<button
@@ -870,8 +914,8 @@
 	bind:currentColor={editModalCurrentColor}
 	on:change={onModalEditChange}
 	on:enter{onModalEditChange}
-	choices={choices}
-	choicesColors={choicesColors}
+	choices={modalChoices}
+	choicesColors={modalChoicesColors}
 />
 
 <ModalBox
@@ -880,9 +924,9 @@
 	bind:currentColor={newModalCurrentColor}
 	on:change={onModalNewChange}
 	on:enter{onModalNewChange}
-	choices={choices}
+	choices={modalChoices}
 	showRemove={false}
-	choicesColors={choicesColors}
+	choicesColors={modalChoicesColors}
 	labelDetailLock={labelDetailLock}
 />
 
@@ -892,9 +936,9 @@
 	bind:currentColor={defaultModalCurrentColor}
 	on:change={onDefaultLabelEditChange}
 	on:enter{onDefaultLabelEditChange}
-	choices={choices}
+	choices={modalChoices}
 	showRemove={false}
-	choicesColors={choicesColors}
+	choicesColors={modalChoicesColors}
 	labelDetailLock={labelDetailLock}
 />
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import warnings
 from pathlib import Path
@@ -171,7 +172,7 @@ class image_annotator(Component):
         self.disable_edit_boxes = disable_edit_boxes
         self.single_box = single_box
         if label_list:
-            self.label_list = [(l, i) for i, l in enumerate(label_list)]
+            self.label_list = list(label_list)
         else:
             self.label_list = None
 
@@ -208,6 +209,13 @@ class image_annotator(Component):
             render=render,
             value=value,
         )
+
+    def get_config(self) -> dict[str, Any]:
+        config = super().get_config()
+        # Send label list as JSON string so the frontend always receives the full
+        # list (Gradio prop serialization can truncate or mishandle arrays).
+        config["label_list_json"] = json.dumps(self.label_list or [])
+        return config
 
     def preprocess_image(self, image: FileData | None) -> str | None:
         if image is None:

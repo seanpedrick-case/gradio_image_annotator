@@ -47,6 +47,7 @@
 		interactive: boolean;
 		boxes_alpha: number;
 		label_list: string[];
+		label_list_json?: string;
 		label_colors: string[];
 		box_min_size: number;
 		handle_size: number;
@@ -102,9 +103,14 @@
 	const gradio = new ImageAnnotatorGradio(props);
 
 	let dragging = $state(false);
-	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(
-		gradio.props.sources ? gradio.props.sources[0] : null
-	);
+	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(null);
+
+	$effect(() => {
+		// Automatically set the default source once props are available
+		if (!active_source && gradio.props.sources?.length > 0) {
+			active_source = gradio.props.sources[0];
+		}
+	});
 </script>
 
 <Block
@@ -145,7 +151,16 @@
 		showClearButton={gradio.props.show_clear_button}
 		i18n={gradio.i18n}
 		boxesAlpha={gradio.props.boxes_alpha}
-		labelList={gradio.props.label_list}
+		labelList={(() => {
+			const raw = gradio.props.label_list_json;
+			if (typeof raw === "string" && raw.length > 0) {
+				try {
+					const parsed = JSON.parse(raw);
+					if (Array.isArray(parsed)) return parsed.map((x: unknown) => (typeof x === "string" ? x : String(x)));
+				} catch (_) {}
+			}
+			return Array.isArray(gradio.props.label_list) ? gradio.props.label_list : [];
+		})()}
 		labelColors={gradio.props.label_colors}
 		boxMinSize={gradio.props.box_min_size}
 		on:edit={() => gradio.dispatch("edit")}

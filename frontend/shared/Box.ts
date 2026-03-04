@@ -166,7 +166,10 @@ export default class Box {
     }
 
     updateHandles(): void {
-        const halfSize = this.resizeHandleSize / 2;
+        // Scale handle size by canvas zoom so handles have consistent screen size for both
+        // newly created and pre-existing boxes (existing boxes get updateOffset/applyUserScale
+        // on load; new boxes may not be fully synced until first render).
+        const halfSize = (this.resizeHandleSize / 2) * this.canvasWindow.scale;
         const width = this.getWidth();
         const height = this.getHeight();
         this.resizeHandles = [
