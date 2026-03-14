@@ -78,8 +78,41 @@ def crop(annotations:dict):
         ]
     return None
 
+def _image_size(image):
+    """Derive (width, height) from image when numpy or PIL."""
+    if image is None:
+        return None, None
+    if isinstance(image, np.ndarray):
+        if image.ndim >= 2:
+            return int(image.shape[1]), int(image.shape[0])  # width, height
+        return None, None
+    if hasattr(image, "size"):  # PIL Image
+        w, h = image.size
+        return int(w), int(h)
+    return None, None
+
+
 def get_boxes_json(annotations):
-    return annotations["boxes"]
+    if annotations is None:
+        return None
+    image = annotations.get("image")
+    image_path = image if isinstance(image, str) else None
+    # Use frontend-provided dimensions when present, else derive from image data (numpy/PIL)
+    image_width = annotations.get("image_width")
+    image_height = annotations.get("image_height")
+    if image_width is None or image_height is None:
+        w, h = _image_size(image)
+        if image_width is None:
+            image_width = w
+        if image_height is None:
+            image_height = h
+    return {
+        "boxes": annotations.get("boxes", []),
+        "orientation": annotations.get("orientation"),
+        "image_width": image_width,
+        "image_height": image_height,
+        "image_path": image_path,
+    }
 
 
 with gr.Blocks() as demo:
@@ -89,6 +122,7 @@ with gr.Blocks() as demo:
             example_annotation,
             label_list=["Person", "Vehicle"],
             label_colors=[(0, 255, 0), (255, 0, 0)],
+            image_type="filepath",
         )
         button_get = gr.Button("Get bounding boxes")
         json_boxes = gr.JSON()
@@ -592,5 +626,7 @@ class AnnotatedImageValue(TypedDict):
     image: Optional[np.ndarray | PIL.Image.Image | str]
     boxes: Optional[List[dict]]
     orientation: Optional[int]
+    image_width: Optional[int]
+    image_height: Optional[int]
 
 ```
