@@ -22,12 +22,16 @@ class AnnotatedImageData(GradioModel):
     image: FileData
     boxes: List[dict] = []
     orientation: int = 0
+    image_width: Optional[int] = None
+    image_height: Optional[int] = None
 
 
 class AnnotatedImageValue(TypedDict):
     image: Optional[np.ndarray | PIL.Image.Image | str]
     boxes: Optional[List[dict]]
     orientation: Optional[int]
+    image_width: Optional[int]
+    image_height: Optional[int]
 
 
 def rgb2hex(r, g, b):
@@ -311,6 +315,8 @@ class image_annotator(Component):
             "image": self.preprocess_image(payload.image),
             "boxes": self.preprocess_boxes(payload.boxes),
             "orientation": payload.orientation,
+            "image_width": getattr(payload, "image_width", None),
+            "image_height": getattr(payload, "image_height", None),
         }
         return ret_value
 
@@ -364,7 +370,16 @@ class image_annotator(Component):
         if orientation is None:
             orientation = 0
 
-        return AnnotatedImageData(image=image, boxes=boxes, orientation=orientation)
+        image_width = value.get("image_width")
+        image_height = value.get("image_height")
+
+        return AnnotatedImageData(
+            image=image,
+            boxes=boxes,
+            orientation=orientation,
+            image_width=image_width,
+            image_height=image_height,
+        )
 
     def process_example(self, value: dict | None) -> FileData | None:
         if value is None:
