@@ -18,7 +18,7 @@ keywords = ["gradio-custom-component", "gradio-template-Image", "bounding box", 
 # Add dependencies here
 dependencies = ["gradio>=6.9.0,<7.0"]
 classifiers = [
-  'Development Status :: 3 - Alpha',
+  'Development Status :: 5 - Production/Stable',
   'License :: OSI Approved :: Apache Software License',
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3',
@@ -27,6 +27,8 @@ classifiers = [
   'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.12',
+  'Programming Language :: Python :: 3.13',
   'Topic :: Scientific/Engineering',
   'Topic :: Scientific/Engineering :: Artificial Intelligence',
   'Topic :: Scientific/Engineering :: Visualization',
