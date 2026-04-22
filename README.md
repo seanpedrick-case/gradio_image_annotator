@@ -2,7 +2,7 @@
 # `gradio_image_annotation_redaction`
 <a href="https://pypi.org/project/gradio_image_annotation_redaction/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_image_annotation_redaction"></a>  
 
-A Gradio component that can be used to annotate images with bounding boxes, adapted for use with the specific redaction box editing needs of the (Document Redaction app)[https://github.com/seanpedrick-case/doc_redaction]. Forked from (icyray/gradio_image_annotator)[https://github.com/icyray/gradio_image_annotator], which itself was based on the great original work from Edgar Gracia here at (edgarGracia/gradio_image_annotator)[https://github.com/edgarGracia/gradio_image_annotator].
+A Gradio component that can be used to annotate images with bounding boxes, adapted for use with the [Document Redaction app](https://github.com/seanpedrick-case/doc_redaction). Forked from [icyray/gradio_image_annotator](https://github.com/icyray/gradio_image_annotator), which itself was based on the great original work from Edgar Gracia here at [edgarGracia/gradio_image_annotator](https://github.com/edgarGracia/gradio_image_annotator).
 
 ## Installation
 
