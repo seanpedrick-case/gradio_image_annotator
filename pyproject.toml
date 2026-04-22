@@ -7,14 +7,14 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "gradio_image_annotation"
+name = "gradio_image_annotation_redaction"
 version = "0.5.3"
-description = "A Gradio component that can be used to annotate images with bounding boxes."
+description = "A Gradio component that can be used to annotate images with bounding boxes. Adapted for use with Document Redaction app. Forked from original work by edgarGarcia and icyray."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
-authors = [{ name = "Edgar Gracia" }]
-keywords = ["gradio-custom-component", "gradio-template-Image", "bounding box", "annotator", "annotate", "boxes"]
+requires-python = ">=3.10"
+authors = [{ name = "Sean Pedrick-Case" }]
+keywords = ["gradio-custom-component", "gradio-template-Image", "bounding box", "annotator", "annotate", "boxes", "redaction", "pii redaction"]
 # Add dependencies here
 dependencies = ["gradio>=6.9.0,<7.0"]
 classifiers = [
@@ -33,8 +33,8 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/edgarGracia/gradio_image_annotator.git"
-Issues = "https://github.com/edgarGracia/gradio_image_annotator/issues"
+Repository = "https://github.com/seanpedrick-case/gradio_image_annotator.git"
+Issues = "https://github.com/seanpedrick-case/gradio_image_annotator/issues"
 
 [project.optional-dependencies]
 dev = ["build", "twine"]
