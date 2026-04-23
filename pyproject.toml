@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gradio_image_annotation_redaction"
-version = "0.5.4"
+version = "0.5.5"
 description = "A Gradio component that can be used to annotate images with bounding boxes. Adapted for use with Document Redaction app. Forked from original work by edgarGarcia and icyray."
 readme = "README.md"
 license = "MIT"
@@ -42,7 +42,7 @@ Issues = "https://github.com/seanpedrick-case/gradio_image_annotator/issues"
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gradio_image_annotation/templates", "*.pyi", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "backend/gradio_image_annotation/templates", "/home/spedrickcase/.pyenv/versions/3.12.12/lib/python3.12/site-packages/gradio_image_annotation/templates"]
+artifacts = ["/backend/gradio_image_annotation_redaction/templates", "*.pyi", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "backend/gradio_image_annotation_redaction/templates", "/home/spedrickcase/.pyenv/versions/3.12.12/lib/python3.12/site-packages/gradio_image_annotation_redaction/templates"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["/backend/gradio_image_annotation"]
+packages = ["/backend/gradio_image_annotation_redaction"]
