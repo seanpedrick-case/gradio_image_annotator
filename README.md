@@ -2,7 +2,7 @@
 # `gradio_image_annotation_redaction`
 <a href="https://pypi.org/project/gradio_image_annotation_redaction/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_image_annotation_redaction"></a>  
 
-A Gradio component that can be used to annotate images with bounding boxes, adapted for use with the [Document Redaction app](https://github.com/seanpedrick-case/doc_redaction). Forked from [icyray/gradio_image_annotator](https://github.com/icyray/gradio_image_annotator), which itself was based on the great original work from Edgar Gracia here at [edgarGracia/gradio_image_annotator](https://github.com/edgarGracia/gradio_image_annotator).
+A Gradio component that can be used to annotate images with bounding boxes. Adapted for use with Document Redaction app. Forked from original work by edgarGarcia and icyray.
 
 ## Installation
 
@@ -14,27 +14,31 @@ pip install gradio_image_annotation_redaction
 
 ```python
 import gradio as gr
-from gradio_image_annotation import image_annotator
+from gradio_image_annotation_redaction import image_annotator
 import numpy as np
 
 example_annotation = {
-    "image":   "https://gradio-builds.s3.amazonaws.com/demo-files/base.png",
+    "image":   "https://raw.githubusercontent.com/seanpedrick-case/document_redaction_examples/refs/heads/main/example_complaint_letter.jpg",
     "boxes": [
         {
-            "xmin": 636,
-            "ymin": 575,
-            "xmax": 801,
-            "ymax": 697,
-            "label": "Vehicle",
-            "color": (255, 0, 0)
+            "xmin": 125,
+            "ymin": 239,
+            "xmax": 230,
+            "ymax": 266,
+            "label": "Name",
+            "color": (255, 0, 0),
+            "text": "Mark Smith",
+            "page": 1,
         },
         {
-            "xmin": 360,
-            "ymin": 615,
-            "xmax": 386,
-            "ymax": 702,
-            "label": "Person",
-            "color": (0, 255, 0)
+            "xmin": 125,
+            "ymin": 288,
+            "xmax": 301,
+            "ymax": 375,
+            "label": "Address",
+            "color": (0, 255, 0),
+            "text": "Sofa Showroom, 555 Broadway, Cityland, KS 66214",
+            "page": 1,
         }
     ]
 }
@@ -53,7 +57,7 @@ examples_crop = [
         ],
     },
     {
-        "image": "https://gradio-builds.s3.amazonaws.com/demo-files/base.png",
+        "image": "https://raw.githubusercontent.com/seanpedrick-case/document_redaction_examples/refs/heads/main/example_complaint_letter.jpg",
         "boxes": [
             {
                 "xmin": 636,
