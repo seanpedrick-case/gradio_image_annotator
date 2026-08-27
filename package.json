@@ -1,5 +1,5 @@
 {
   "devDependencies": {
-    "@gradio/preview": "^0.8.3"
+    "@gradio/preview": "0.17.0"
   }
 }

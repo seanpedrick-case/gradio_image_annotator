@@ -275,7 +275,9 @@ class image_annotator(Component):
 
             # Apply scaling to coordinates, overwriting the copied values
             # Ensure keys exist before attempting to scale/assign
-            scale_factor = box.get("scaleFactor", 1) # Get scale factor from original box
+            scale_factor = box.get("scaleFactor", 1)
+            if not isinstance(scale_factor, (int, float)) or scale_factor <= 0:
+                scale_factor = 1
 
             if "xmin" in new_box:
                  new_box["xmin"] = round(new_box["xmin"] / scale_factor)
