@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount, onDestroy, createEventDispatcher } from "svelte";
 	import { BoundingBox, Hand, Trash, Label } from "./icons/index";
 	import ModalBox from "./ModalBox.svelte";
 	import Box from "./Box";
@@ -31,20 +31,22 @@
 		showRemoveButton = (disableEditBoxes);
 	}
 
-    let canvas: HTMLCanvasElement;
+    let canvas: HTMLCanvasElement | null = null;
 	let annotatorContainerDiv: HTMLDivElement;
-	let ctx: CanvasRenderingContext2D;
+	let ctx: CanvasRenderingContext2D | null = null;
     let image = null;
 	let selectedBox = -1;
 	let mode: Mode = Mode.drag;
 	let canvasWindow: WindowViewer = new WindowViewer(draw);
+	let destroyed = false;
+	const pendingRafIds: number[] = [];
 
-	// Box instances are stored here, NOT in value.boxes. This keeps Box instances
-	// out of the Svelte 5 $state deep-reactive proxy (value lives in gradio.props which
-	// is $state). Without this separation, draw()→render()→updateOffset()→updateHandles()
-	// writes hundreds of reactive signals per frame, causing flush_count > 1000 and
-	// the effect_update_depth_exceeded error when blocks.load() + nested layout are present.
-	let _boxes: Box[] = [];
+	// Box instances live on a plain object, not in value.boxes and not in a component
+	// `let`. value is a Gradio $state proxy, and Svelte 5 `let` is also reactive.
+	// Keeping Box instances out of both prevents draw()→render()→updateOffset()→
+	// updateHandles() from writing hundreds of signals per frame (flush_count > 1000 /
+	// effect_update_depth_exceeded with blocks.load() + nested layout).
+	const _boxStore: { items: Box[] } = { items: [] };
 
 	if (value !== null && value.boxes.length == 0) {
 		mode = Mode.creation;
@@ -83,6 +85,24 @@
 		change: { boxes: any[], orientation: number } | null;
 	}>();
 
+	function scheduleAfterPaint(fn: () => void) {
+		const id1 = requestAnimationFrame(() => {
+			const id2 = requestAnimationFrame(() => {
+				if (destroyed || !canvas) return;
+				fn();
+			});
+			pendingRafIds.push(id2);
+		});
+		pendingRafIds.push(id1);
+	}
+
+	function cancelPendingRafs() {
+		for (const id of pendingRafIds) {
+			cancelAnimationFrame(id);
+		}
+		pendingRafIds.length = 0;
+	}
+
 	// Store orientation locally as a plain (non-reactive) property so we never write
 	// to value.orientation (a $state proxy property), which would trigger the main
 	// Gradio app's reactive cascade and cause effect_update_depth_exceeded.
@@ -92,9 +112,12 @@
 	 *  detail so Index.svelte can return it from get_data() WITHOUT writing to $state.
 	 *  This completely avoids triggering the main app's reactive cascade. */
 	function dispatchChangeDeferred() {
-		const boxes = _boxes.map(b => b.toJSON());
+		const boxes = _boxStore.items.map(b => b.toJSON());
 		const orientation = _internal.orientation;
-		setTimeout(() => dispatch("change", { boxes, orientation }), 0);
+		setTimeout(() => {
+			if (destroyed) return;
+			dispatch("change", { boxes, orientation });
+		}, 0);
 	}
 
 	function colorHexToRGB(hex: string) {
@@ -128,7 +151,7 @@
 			: [];
 		const mergedColors: string[] = Array.isArray(choicesColors) ? [...choicesColors] : [];
 		const seen = new Set(mergedChoices.map(([l]) => l));
-		for (const box of _boxes) {
+		for (const box of _boxStore.items) {
 			const label = (box.label || "").trim();
 			if (label !== "" && !seen.has(label)) {
 				seen.add(label);
@@ -143,49 +166,48 @@
 	let modalChoicesColors: string[] = [];
 	
     function draw() {
-		if (ctx) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.save();
-			ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
-			ctx.scale(canvasWindow.scale, canvasWindow.scale);
-			if (image !== null){
-				switch (_internal.orientation) {
-					case 0:
-						ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
-						break;
-					case 1:
-						ctx.translate(imageWidth, 0);
-						ctx.rotate(Math.PI / 2);
-						ctx.drawImage(image, 0, 0, imageHeight, imageWidth);
-						break;
-					case 2:
-						ctx.translate(imageWidth, imageHeight);
-						ctx.rotate(Math.PI);
-						ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
-						break;
-					case 3:
-						ctx.translate(0, imageHeight);
-						ctx.rotate(-Math.PI / 2);
-						ctx.drawImage(image, 0, 0, imageHeight, imageWidth);
-						break;
-				}
+		if (destroyed || !ctx || !canvas) return;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.save();
+		ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
+		ctx.scale(canvasWindow.scale, canvasWindow.scale);
+		if (image !== null){
+			switch (_internal.orientation) {
+				case 0:
+					ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
+					break;
+				case 1:
+					ctx.translate(imageWidth, 0);
+					ctx.rotate(Math.PI / 2);
+					ctx.drawImage(image, 0, 0, imageHeight, imageWidth);
+					break;
+				case 2:
+					ctx.translate(imageWidth, imageHeight);
+					ctx.rotate(Math.PI);
+					ctx.drawImage(image, 0, 0, imageWidth, imageHeight);
+					break;
+				case 3:
+					ctx.translate(0, imageHeight);
+					ctx.rotate(-Math.PI / 2);
+					ctx.drawImage(image, 0, 0, imageHeight, imageWidth);
+					break;
+			}
 
 
-				ctx.restore();
-				// ctx.resetTransform();
-			}
-			
-			for (const box of _boxes.slice().reverse()) {
-				box.render(ctx);
-			}
+			ctx.restore();
+			// ctx.resetTransform();
+		}
+
+		for (const box of _boxStore.items.slice().reverse()) {
+			box.render(ctx);
 		}
 	}
 
 	function selectBox(index: number) {
 		selectedBox = index;
-		_boxes.forEach((box) => box.setSelected(false));
-		if (index >= 0 && index < _boxes.length) {
-			_boxes[index].setSelected(true);
+		_boxStore.items.forEach((box) => box.setSelected(false));
+		if (index >= 0 && index < _boxStore.items.length) {
+			_boxStore.items[index].setSelected(true);
 		}
 		draw();
 	}
@@ -210,13 +232,14 @@
 	}
 
 	function clickBox(event: PointerEvent) {
+		if (!canvas) return;
 		const rect = canvas.getBoundingClientRect();
 		const mouseX = event.clientX - rect.left;
 		const mouseY = event.clientY - rect.top;
 		let selectedBoxFlag = false;
 
 		// Check if the mouse is over any of the resizing handles
-		for (const [i, box] of _boxes.entries()) {
+		for (const [i, box] of _boxStore.items.entries()) {
 			const handleIndex = box.indexOfPointInsideHandle(mouseX, mouseY);
 			if (handleIndex >= 0) {
 				selectedBoxFlag = true;
@@ -227,7 +250,7 @@
 		}
 
 		// Check if the mouse is inside a box
-		for (const [i, box] of _boxes.entries()) {
+		for (const [i, box] of _boxStore.items.entries()) {
 			if (box.isPointInsideBox(mouseX, mouseY)) {
 				selectedBoxFlag = true;
 				selectBox(i);
@@ -250,7 +273,7 @@
 	}
 
 	function handlePointerMove(event: PointerEvent) {
-		if (value === null) {
+		if (value === null || !canvas) {
 			return;
 		}
 
@@ -262,7 +285,7 @@
 		const mouseX = event.clientX - rect.left;
 		const mouseY = event.clientY - rect.top;
 
-		for (const [_, box] of _boxes.entries()) {
+		for (const [_, box] of _boxStore.items.entries()) {
 			const handleIndex = box.indexOfPointInsideHandle(mouseX, mouseY);
 			if (handleIndex >= 0) {
 				canvas.style.cursor = box.resizeHandles[handleIndex].cursor;
@@ -274,6 +297,7 @@
 	}
 
 	function resetView() {
+		if (!canvas) return;
 		const scaleX = canvas.width / imageWidth;
 		const scaleY = canvas.height / imageHeight;
 		const minScale = Math.min(scaleX, scaleY);
@@ -312,7 +336,7 @@
 	}
 
 	function handleMouseWheel(event: WheelEvent) {
-		if (!interactive) {
+		if (!interactive || !canvas) {
 			return;
 		}
 
@@ -336,6 +360,7 @@
 	}
 
 	function createBox(event: PointerEvent) {
+		if (!canvas) return;
 		const rect = canvas.getBoundingClientRect();
 		const x = (event.clientX - rect.left - canvasWindow.offsetX) / canvasWindow.scale;
 		const y = (event.clientY - rect.top - canvasWindow.offsetY) / canvasWindow.scale;
@@ -368,9 +393,9 @@
             if (choicesColors.length > 0) {
                 color = colorHexToRGB(choicesColors[0]);
             } else if (singleBox) {
-                color = _boxes.length > 0 ? _boxes[0].color : Colors[0];
+                color = _boxStore.items.length > 0 ? _boxStore.items[0].color : Colors[0];
             } else {
-                color = Colors[_boxes.length % Colors.length];
+                color = Colors[_boxStore.items.length % Colors.length];
             }
         }
 
@@ -405,12 +430,11 @@
             currentScaleFactor
         );
         box.startCreating(event, rect.left, rect.top);
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
+        scheduleAfterPaint(() => {
                 if (singleBox) {
-                    _boxes = [box];
+                    _boxStore.items = [box];
                 } else {
-                    _boxes = [box, ..._boxes];
+                    _boxStore.items = [box, ..._boxStore.items];
                 }
                 // Recompute and set scaleFactor after layout so it matches pre-existing boxes
                 // (assign only; do not call setScaleFactor() or coords would be rescaled)
@@ -426,23 +450,22 @@
                 selectBox(0);
                 draw();
                 dispatchChangeDeferred();
-            });
         });
     }
 
 	function setCreateMode() {
 		mode = Mode.creation;
-		canvas.style.cursor = "crosshair";
+		if (canvas) canvas.style.cursor = "crosshair";
 	}
 
 	function setDragMode() {
 		mode = Mode.drag;
-		canvas.style.cursor = "default";
+		if (canvas) canvas.style.cursor = "default";
 	}
 
 	function onBoxFinishCreation() {
-		if (selectedBox >= 0 && selectedBox < _boxes.length) {
-			if (_boxes[selectedBox].getArea() < 1) {
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length) {
+			if (_boxStore.items[selectedBox].getArea() < 1) {
 				onDeleteBox();
 			} else {
 				if (!disableEditBoxes) {
@@ -458,8 +481,8 @@
 						const m = getMergedChoices();
 						modalChoices = m.choices;
 						modalChoicesColors = m.colors;
-						newModalCurrentLabel = _boxes[selectedBox].label;
-						newModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
+						newModalCurrentLabel = _boxStore.items[selectedBox].label;
+						newModalCurrentColor = colorRGBAToHex(_boxStore.items[selectedBox].color);
 						newModalVisible = true;
 					}
 				}
@@ -471,13 +494,13 @@
 	}
 
 	function onEditBox() {
-		if (selectedBox >= 0 && selectedBox < _boxes.length && !disableEditBoxes) {
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length && !disableEditBoxes) {
 			// Same pattern: write label/color before the visibility flag.
 			const m = getMergedChoices();
 			modalChoices = m.choices;
 			modalChoicesColors = m.colors;
-			editModalCurrentLabel = _boxes[selectedBox].label;
-			editModalCurrentColor = colorRGBAToHex(_boxes[selectedBox].color);
+			editModalCurrentLabel = _boxStore.items[selectedBox].label;
+			editModalCurrentColor = colorRGBAToHex(_boxStore.items[selectedBox].color);
 			editModalVisible = true;
 		}
 	}
@@ -497,8 +520,8 @@
 		let label = detail.label;
 		let color = detail.color;
 		let ret = detail.ret;
-		if (selectedBox >= 0 && selectedBox < _boxes.length) {
-			let box = _boxes[selectedBox];
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length) {
+			let box = _boxStore.items[selectedBox];
 		if (ret == 1) {
 			box.label = label;
 			box.color = colorHexToRGB(color);
@@ -518,8 +541,8 @@
 		let color = detail.color;
 		let ret = detail.ret;
 		let lock = detail.lock;
-		if (selectedBox >= 0 && selectedBox < _boxes.length) {
-			let box = _boxes[selectedBox];
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length) {
+			let box = _boxStore.items[selectedBox];
 		if (ret == 1) {
 			labelDetailLock = lock;
 			defaultLabelCache.label = label;
@@ -550,8 +573,8 @@
 	}
 
 	function onUseDefaultLabelModalNew(){
-		if (selectedBox >= 0 && selectedBox < _boxes.length) {
-			let box = _boxes[selectedBox];
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length) {
+			let box = _boxStore.items[selectedBox];
 			box.label = defaultLabelCache.label;
 			if (defaultLabelCache.color !== "") {
 				box.color = colorHexToRGB(defaultLabelCache.color);
@@ -562,8 +585,8 @@
 	}
 
     function onDeleteBox() {
-		if (selectedBox >= 0 && selectedBox < _boxes.length) {
-			_boxes.splice(selectedBox, 1);
+		if (selectedBox >= 0 && selectedBox < _boxStore.items.length) {
+			_boxStore.items.splice(selectedBox, 1);
 			selectBox(-1);
 			if (singleBox) {
 				setCreateMode();
@@ -580,15 +603,18 @@
 		_internal.orientation = (((_internal.orientation + op) % 4) + 4 ) % 4;
 		canvasWindow.orientation = _internal.orientation;
 
-		for (const box of _boxes) {
+		for (const box of _boxStore.items) {
 			box.onRotate(op);
 		}
 		resize(true, true);
 		draw();
 	}
 
+	let resizing = false;
 	function resize(dispatchChange = true, fromRotation = false) {
-		if (canvas) {
+		if (resizing || !canvas) return;
+		resizing = true;
+		try {
 			const oldDisplayWidth = canvasWindow.imageWidth;
 			const oldDisplayHeight = canvasWindow.imageHeight;
 
@@ -596,7 +622,7 @@
 			canvas.width = canvas.clientWidth;
 
 			canvasWindow.setRotatedImage(image);
-			
+
 			if (image !== null) {
 				if (canvasWindow.imageRotatedWidth > canvas.width) {
 					scaleFactor = canvas.width / canvasWindow.imageRotatedWidth;
@@ -628,40 +654,47 @@
 				canvasYmax = canvas.height;
 				canvas.height = canvas.clientHeight;
 			}
-			
+
 			canvasWindow.resize(canvas.width, canvas.height, canvasXmin, canvasYmin);
 
-		if (canvasXmax > 0 && canvasYmax > 0) {
-			for (const box of _boxes) {
-				box.canvasXmin = canvasXmin;
-				box.canvasYmin = canvasYmin;
-				box.canvasXmax = canvasXmax;
-				box.canvasYmax = canvasYmax;
-				if (fromRotation && oldDisplayWidth > 0 && oldDisplayHeight > 0) {
-					// Boxes were transformed by onRotate into (oldDisplayHeight, oldDisplayWidth) space;
-					// scale them into the new display (imageWidth, imageHeight) with correct aspect.
-					const scaleX = imageWidth / oldDisplayHeight;
-					const scaleY = imageHeight / oldDisplayWidth;
-					box.scaleFromRotatedDisplay(scaleX, scaleY);
-					box.scaleFactor = scaleFactor;
-					box.applyUserScale();
-				} else {
-					box.setScaleFactor(scaleFactor);
+			if (canvasXmax > 0 && canvasYmax > 0) {
+				for (const box of _boxStore.items) {
+					box.canvasXmin = canvasXmin;
+					box.canvasYmin = canvasYmin;
+					box.canvasXmax = canvasXmax;
+					box.canvasYmax = canvasYmax;
+					if (fromRotation && oldDisplayWidth > 0 && oldDisplayHeight > 0) {
+						// Boxes were transformed by onRotate into (oldDisplayHeight, oldDisplayWidth) space;
+						// scale them into the new display (imageWidth, imageHeight) with correct aspect.
+						const scaleX = imageWidth / oldDisplayHeight;
+						const scaleY = imageHeight / oldDisplayWidth;
+						box.scaleFromRotatedDisplay(scaleX, scaleY);
+						box.scaleFactor = scaleFactor;
+						box.applyUserScale();
+					} else {
+						box.setScaleFactor(scaleFactor);
+					}
 				}
 			}
-		}
 			draw();
 			if (dispatchChange) dispatchChangeDeferred();
+		} finally {
+			resizing = false;
 		}
 	}
-	const observer = new ResizeObserver(() => resize());
+	const observer = new ResizeObserver(() => {
+		if (destroyed || !canvas) return;
+		// Layout-only: do not dispatch change. Emitting toJSON() here would write
+		// already-display coordinates back into value and trigger parseInputBoxes again.
+		resize(false);
+	});
 
-	/** Convert value.boxes (plain data from Gradio) into Box instances stored in _boxes.
+	/** Convert value.boxes (plain data from Gradio) into Box instances stored in _boxStore.
 	 *  Never writes Box instances back to value.boxes — keeping Box instances out of
 	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
         if (value === null || !Array.isArray(value.boxes)) {
-            _boxes = [];
+            _boxStore.items = [];
             return;
         }
 
@@ -734,7 +767,14 @@
                     boxThickness,
                     boxSelectedThickness
                 );
-                boxInstance.setScaleFactor(backendScaleFactor);
+                // Record the factor only. setScaleFactor() rewrites _xmin/_ymin/_xmax/_ymax
+                // by (new / old); doing that here would double-scale after resize() has
+                // already converted image pixels into display pixels (and toJSON() round-
+                // tripped those display coords with scaleFactor === fit).
+                boxInstance.scaleFactor =
+                    typeof backendScaleFactor === "number" && backendScaleFactor > 0
+                        ? backendScaleFactor
+                        : 1;
                 boxInstance.applyUserScale();
 
                 newBoxes.push(boxInstance);
@@ -743,7 +783,7 @@
             }
         }
 
-        _boxes = newBoxes;
+        _boxStore.items = newBoxes;
     }
 
 	// Plain object container so property mutations are invisible to Svelte 5's
@@ -755,17 +795,15 @@
 			_lastProcessed.value = currentValue;
 			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
 			_internal.orientation = (currentValue !== null ? currentValue.orientation : 0) ?? 0;
-			requestAnimationFrame(() => {
-				requestAnimationFrame(() => {
+			scheduleAfterPaint(() => {
 					canvasWindow.orientation = _internal.orientation;
 					setImage();
 					parseInputBoxes();
-					if (selectedBox < 0 && _boxes.length > 0) {
+					if (selectedBox < 0 && _boxStore.items.length > 0) {
 						selectBox(0);
 					}
 					resize(false);
 					draw();
-				});
 			});
 		}
 	}
@@ -773,10 +811,14 @@
 	function setImage(){
 		if (imageUrl !== null) {
 			if (image === null || image.src != imageUrl) {
+				if (image) {
+					image.onload = null;
+				}
 				image = new Image();
 				image.src = imageUrl;
 				image.onload = function(){
-					resize();
+					if (destroyed || !ctx || !canvas) return;
+					resize(false);
 					draw();
 				}
 			}
@@ -795,17 +837,31 @@
 			defaultLabelCache.color = choicesColors[0]
 		}
 
+		if (!canvas) return;
 		ctx = canvas.getContext("2d");
 		observer.observe(canvas);
 
-		// _boxes is populated by the $: block's RAF. At mount time it will be empty,
+		// _boxStore is populated by the $: block's RAF. At mount time it will be empty,
 		// so the RAF will handle initial selection once parseInputBoxes() runs.
-		if (selectedBox < 0 && _boxes.length > 0) {
+		if (selectedBox < 0 && _boxStore.items.length > 0) {
 			selectBox(0);
 		}
 		setImage();
 		resize();
 		draw();
+	});
+
+	onDestroy(() => {
+		destroyed = true;
+		cancelPendingRafs();
+		observer.disconnect();
+		if (image) {
+			image.onload = null;
+			image = null;
+		}
+		canvasWindow.stopDrag();
+		ctx = null;
+		canvas = null;
 	});
 	
 

@@ -90,7 +90,7 @@ export default class Box {
         this.canvasYmin = canvasYmin;
         this.canvasXmax = canvasXmax;
         this.canvasYmax = canvasYmax;
-        this.scaleFactor = scaleFactor;
+        this.scaleFactor = Number.isFinite(scaleFactor) && scaleFactor > 0 ? scaleFactor : 1;
         this.label = label;
         this.isDragging = false;
         this.isCreating = false;
@@ -143,13 +143,19 @@ export default class Box {
     }
 
     setScaleFactor(scaleFactor: number) {
-        let scale = scaleFactor / this.scaleFactor;
+        if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) {
+            return;
+        }
+        const current =
+            Number.isFinite(this.scaleFactor) && this.scaleFactor > 0
+                ? this.scaleFactor
+                : 1;
+        const scale = scaleFactor / current;
         this._xmin = Math.round(this._xmin * scale);
         this._ymin = Math.round(this._ymin * scale);
         this._xmax = Math.round(this._xmax * scale);
         this._ymax = Math.round(this._ymax * scale);
         this.applyUserScale();
-        // this.updateHandles();
         this.scaleFactor = scaleFactor;
     }
 
