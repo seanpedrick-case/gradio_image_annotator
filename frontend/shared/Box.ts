@@ -1,6 +1,11 @@
 import WindowViewer from "./WindowViewer";
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
 
+// An image 100x wider than the canvas is not a real layout, it is a bad
+// measurement taken mid-layout. Backstop only: resize() should not be handing
+// such a factor over in the first place.
+const MIN_SCALE_FACTOR = 0.01;
+
 
 function setAlpha(rgbColor: string, alpha: number) {
     if (rgbColor.startsWith('rgba')) {
@@ -19,10 +24,16 @@ export default class Box {
     ymin: number;
     xmax: number;
     ymax: number;
-    _xmin: number; // Store original image coordinates
+    _xmin: number; // Display-space coordinates, i.e. natural pixels * scaleFactor
     _ymin: number;
     _xmax: number;
     _ymax: number;
+    // Natural (unscaled) image pixels. The anchor every display coordinate is
+    // derived from, so a rescale never reads back its own rounded output.
+    _naturalXmin: number;
+    _naturalYmin: number;
+    _naturalXmax: number;
+    _naturalYmax: number;
     color: string;
     alpha: number;
     // ADDED: Properties for id, text and page
@@ -98,6 +109,7 @@ export default class Box {
         this._ymin = ymin;
         this._xmax = xmax;
         this._ymax = ymax;
+        this.syncNaturalFromDisplay();
         this.xmin = this._xmin * this.canvasWindow.scale; // Re-add coordinate assignments if needed, or handle in applyUserScale
         this.ymin = this._ymin * this.canvasWindow.scale;
         this.xmax = this._xmax * this.canvasWindow.scale;
@@ -142,27 +154,57 @@ export default class Box {
         this.isSelected = selected;
     }
 
-    setScaleFactor(scaleFactor: number) {
-        if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) {
-            return;
-        }
+    /**
+     * Re-derive the natural-pixel anchor from the current display coordinates.
+     * Call after anything that moves _xmin/_ymin/_xmax/_ymax, i.e. a real edit.
+     */
+    syncNaturalFromDisplay(): void {
         const current =
             Number.isFinite(this.scaleFactor) && this.scaleFactor > 0
                 ? this.scaleFactor
                 : 1;
-        const scale = scaleFactor / current;
-        this._xmin = Math.round(this._xmin * scale);
-        this._ymin = Math.round(this._ymin * scale);
-        this._xmax = Math.round(this._xmax * scale);
-        this._ymax = Math.round(this._ymax * scale);
-        this.applyUserScale();
+        this._naturalXmin = this._xmin / current;
+        this._naturalYmin = this._ymin / current;
+        this._naturalXmax = this._xmax / current;
+        this._naturalYmax = this._ymax / current;
+    }
+
+    /**
+     * Record a scale factor that the current display coordinates are already
+     * expressed in, without moving them. Unlike a bare `box.scaleFactor = x`
+     * this keeps the natural anchor consistent with the display coordinates.
+     */
+    adoptScaleFactor(scaleFactor: number): void {
+        if (!Number.isFinite(scaleFactor) || scaleFactor < MIN_SCALE_FACTOR) {
+            return;
+        }
         this.scaleFactor = scaleFactor;
+        this.syncNaturalFromDisplay();
+    }
+
+    setScaleFactor(scaleFactor: number) {
+        if (!Number.isFinite(scaleFactor) || scaleFactor < MIN_SCALE_FACTOR) {
+            return;
+        }
+        // Always from the anchor, never from _xmin. Deriving new coordinates from
+        // the previous rounded ones loses precision on every rescale, and one
+        // rescale against a mid-layout canvas would round them to a zero-area box
+        // that no later rescale can bring back.
+        this._xmin = Math.round(this._naturalXmin * scaleFactor);
+        this._ymin = Math.round(this._naturalYmin * scaleFactor);
+        this._xmax = Math.round(this._naturalXmax * scaleFactor);
+        this._ymax = Math.round(this._naturalYmax * scaleFactor);
+        this.scaleFactor = scaleFactor;
+        this.applyUserScale();
     }
 
     /**
      * Scale box coordinates from (oldDisplayHeight, oldDisplayWidth) space into
      * the new display size after a rotation, using separate x/y scale factors
      * so aspect-ratio change from the rotation is handled correctly.
+     *
+     * Leaves the box in the new display space at the caller's new scale factor,
+     * so the caller must follow up with adoptScaleFactor(), not setScaleFactor().
      */
     scaleFromRotatedDisplay(scaleX: number, scaleY: number): void {
         this._xmin = Math.round(this._xmin * scaleX);
@@ -368,6 +410,7 @@ export default class Box {
             this._xmax += deltaX;
             this._ymax += deltaY;
 
+            this.syncNaturalFromDisplay();
             this.applyUserScale();
             // this.updateHandles();
             this.renderCallBack();
@@ -450,6 +493,7 @@ export default class Box {
                 this._ymin = y;
                 this.creatingAnchorY = "ymax";
             }
+            this.syncNaturalFromDisplay();
             this.applyUserScale();
             // this.updateHandles();
             this.renderCallBack();
@@ -499,6 +543,7 @@ export default class Box {
                     this._ymin = 0;
                 }
             }
+            this.syncNaturalFromDisplay();
             this.applyUserScale();
             // this.updateHandles();
             this.renderCallBack();
@@ -567,6 +612,7 @@ export default class Box {
             }
 
             // Update the resize handles
+            this.syncNaturalFromDisplay();
             this.applyUserScale();
             // this.updateHandles();
             this.renderCallBack();
@@ -597,6 +643,7 @@ export default class Box {
                 this._ymax = this.canvasWindow.imageWidth - _xmin;
                 break;
         }
+        this.syncNaturalFromDisplay();
         this.applyUserScale();
     }
 }
