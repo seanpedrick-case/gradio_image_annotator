@@ -58,6 +58,10 @@
 	let canvasYmax = 0;
 	let scaleFactor = 1.0;
 
+	// No usable annotator viewport is this narrow, so a width below it means the
+	// canvas was measured before its layout settled rather than genuinely resized.
+	const MIN_CANVAS_DISPLAY_WIDTH = 50;
+
 	let imageWidth = 0;
 	let imageHeight = 0;
 
@@ -108,10 +112,19 @@
 	// Gradio app's reactive cascade and cause effect_update_depth_exceeded.
 	const _internal = { orientation: (value !== null ? value.orientation : 0) ?? 0 };
 
+	// Set once parseInputBoxes() has run, i.e. once _boxStore reflects the incoming
+	// value rather than the empty state it mounts in.
+	let valueParsed = false;
+
 	/** Dispatch change event in next macrotask, passing current box + orientation data as
 	 *  detail so Index.svelte can return it from get_data() WITHOUT writing to $state.
 	 *  This completely avoids triggering the main app's reactive cascade. */
 	function dispatchChangeDeferred() {
+		// Before the first parseInputBoxes() the store is empty and says nothing about
+		// user intent. Index.svelte holds whatever we report in _pendingUpdate and
+		// splices it into value.boxes on the next get_data(), so dispatching here would
+		// erase every box the server sent and empty the store on the next $: run.
+		if (!valueParsed) return;
 		const boxes = _boxStore.items.map(b => b.toJSON());
 		const orientation = _internal.orientation;
 		setTimeout(() => {
@@ -438,15 +451,16 @@
                 } else {
                     _boxStore.items = [box, ..._boxStore.items];
                 }
-                // Recompute and set scaleFactor after layout so it matches pre-existing boxes
-                // (assign only; do not call setScaleFactor() or coords would be rescaled)
+                // Recompute and set scaleFactor after layout so it matches pre-existing boxes.
+                // adoptScaleFactor, not setScaleFactor: the box was drawn in display space
+                // already, so the factor is being recorded, not applied.
                 const canvasDisplayWidth = canvas ? canvas.clientWidth : 0;
-                if (image !== null && canvasDisplayWidth > 0 && image.naturalWidth > 0) {
+                if (image !== null && canvasDisplayWidth >= MIN_CANVAS_DISPLAY_WIDTH && image.naturalWidth > 0) {
                     const rotatedWidth = (_internal.orientation === 0 || _internal.orientation === 2)
                         ? image.naturalWidth
                         : image.naturalHeight;
                     if (rotatedWidth > canvasDisplayWidth) {
-                        box.scaleFactor = canvasDisplayWidth / rotatedWidth;
+                        box.adoptScaleFactor(canvasDisplayWidth / rotatedWidth);
                     }
                 }
                 selectBox(0);
@@ -619,12 +633,12 @@
 	function resize(dispatchChange = true, fromRotation = false) {
 		if (resizing || !canvas) return;
 
-		// A hidden tab reports clientWidth 0, and a newly assigned Image reports
-		// naturalWidth 0 until `load`. Measuring in either state yields scale 0 and a
-		// 0-height canvas, and leaves every box unscaled with nothing left to trigger
-		// a redraw. Defer instead, and touch no state.
+		// A hidden tab reports clientWidth 0, and a tab part-way through being shown can
+		// report a handful of pixels for a frame before its column lays out. Both yield a
+		// scale factor at or near zero. A newly assigned Image likewise reports
+		// naturalWidth 0 until `load`. Defer instead, and touch no state.
 		const imageReady = image === null || (image.complete && image.naturalWidth > 0);
-		if (canvas.clientWidth <= 0 || !imageReady) {
+		if (canvas.clientWidth < MIN_CANVAS_DISPLAY_WIDTH || !imageReady) {
 			pendingResize = true;
 			pendingDispatchChange = pendingDispatchChange || dispatchChange;
 			pendingFromRotation = pendingFromRotation || fromRotation;
@@ -695,7 +709,7 @@
 						const scaleX = imageWidth / oldDisplayHeight;
 						const scaleY = imageHeight / oldDisplayWidth;
 						box.scaleFromRotatedDisplay(scaleX, scaleY);
-						box.scaleFactor = scaleFactor;
+						box.adoptScaleFactor(scaleFactor);
 						box.applyUserScale();
 					} else {
 						box.setScaleFactor(scaleFactor);
@@ -728,6 +742,7 @@
 	 *  Never writes Box instances back to value.boxes — keeping Box instances out of
 	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
+        valueParsed = true;
         if (value === null || !Array.isArray(value.boxes)) {
             _boxStore.items = [];
             return;
@@ -802,14 +817,15 @@
                     boxThickness,
                     boxSelectedThickness
                 );
-                // Record the factor only. setScaleFactor() rewrites _xmin/_ymin/_xmax/_ymax
-                // by (new / old); doing that here would double-scale after resize() has
-                // already converted image pixels into display pixels (and toJSON() round-
-                // tripped those display coords with scaleFactor === fit).
-                boxInstance.scaleFactor =
+                // Record the factor only. setScaleFactor() would move the coordinates,
+                // double-scaling them when resize() has already converted image pixels
+                // into display pixels (and toJSON() round-tripped those display coords
+                // with scaleFactor === fit).
+                boxInstance.adoptScaleFactor(
                     typeof backendScaleFactor === "number" && backendScaleFactor > 0
                         ? backendScaleFactor
-                        : 1;
+                        : 1
+                );
                 boxInstance.applyUserScale();
 
                 newBoxes.push(boxInstance);
@@ -883,7 +899,9 @@
 			selectBox(0);
 		}
 		setImage();
-		resize();
+		// Layout-only, like the observers: mount is not a user edit, and dispatching
+		// here would report the still-empty box store as the component's value.
+		resize(false);
 		draw();
 	});
 
