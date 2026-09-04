@@ -73,12 +73,16 @@ export default class WindowViewer {
 
     setRotatedImage(image: HTMLImageElement | null): void {
         if (image !== null) {
+            // naturalWidth/naturalHeight are the decoded image size; width/height are
+            // layout attributes that read 0 before `load` and are writable.
+            const naturalWidth = image.naturalWidth || image.width;
+            const naturalHeight = image.naturalHeight || image.height;
             if (this.orientation == 0 || this.orientation == 2) {
-                this.imageRotatedWidth = image.width;
-                this.imageRotatedHeight = image.height;
+                this.imageRotatedWidth = naturalWidth;
+                this.imageRotatedHeight = naturalHeight;
             } else { // (this.orientation == 1 || this.orientation == 3)
-                this.imageRotatedWidth = image.height;
-                this.imageRotatedHeight = image.width;
+                this.imageRotatedWidth = naturalHeight;
+                this.imageRotatedHeight = naturalWidth;
             }
         }
     }

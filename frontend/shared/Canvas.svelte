@@ -166,7 +166,9 @@
 	let modalChoicesColors: string[] = [];
 	
     function draw() {
-		if (destroyed || !ctx || !canvas) return;
+		// Painting while a resize is pending would show one frame of unscaled boxes.
+		// resize() clears the flag and calls draw() itself once it succeeds.
+		if (destroyed || !ctx || !canvas || pendingResize) return;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
 		ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
@@ -368,10 +370,10 @@
 		// Use same scaleFactor logic as resize(): canvas.clientWidth (current layout), not canvas.width
 		let currentScaleFactor = 1.0;
 		const canvasDisplayWidth = canvas ? canvas.clientWidth : 0;
-		if (image !== null && canvasDisplayWidth > 0 && image.width > 0) {
+		if (image !== null && canvasDisplayWidth > 0 && image.naturalWidth > 0) {
 			const rotatedWidth = (_internal.orientation === 0 || _internal.orientation === 2)
-				? image.width
-				: image.height;
+				? image.naturalWidth
+				: image.naturalHeight;
 			if (rotatedWidth > canvasDisplayWidth) {
 				currentScaleFactor = canvasDisplayWidth / rotatedWidth;
 			}
@@ -439,10 +441,10 @@
                 // Recompute and set scaleFactor after layout so it matches pre-existing boxes
                 // (assign only; do not call setScaleFactor() or coords would be rescaled)
                 const canvasDisplayWidth = canvas ? canvas.clientWidth : 0;
-                if (image !== null && canvasDisplayWidth > 0 && image.width > 0) {
+                if (image !== null && canvasDisplayWidth > 0 && image.naturalWidth > 0) {
                     const rotatedWidth = (_internal.orientation === 0 || _internal.orientation === 2)
-                        ? image.width
-                        : image.height;
+                        ? image.naturalWidth
+                        : image.naturalHeight;
                     if (rotatedWidth > canvasDisplayWidth) {
                         box.scaleFactor = canvasDisplayWidth / rotatedWidth;
                     }
@@ -611,8 +613,32 @@
 	}
 
 	let resizing = false;
+	let pendingResize = false;
+	let pendingDispatchChange = false;
+	let pendingFromRotation = false;
 	function resize(dispatchChange = true, fromRotation = false) {
 		if (resizing || !canvas) return;
+
+		// A hidden tab reports clientWidth 0, and a newly assigned Image reports
+		// naturalWidth 0 until `load`. Measuring in either state yields scale 0 and a
+		// 0-height canvas, and leaves every box unscaled with nothing left to trigger
+		// a redraw. Defer instead, and touch no state.
+		const imageReady = image === null || (image.complete && image.naturalWidth > 0);
+		if (canvas.clientWidth <= 0 || !imageReady) {
+			pendingResize = true;
+			pendingDispatchChange = pendingDispatchChange || dispatchChange;
+			pendingFromRotation = pendingFromRotation || fromRotation;
+			return;
+		}
+
+		// A deferred rotation never ran, so canvasWindow.imageWidth/imageHeight still
+		// hold the pre-rotation display dims that oldDisplayWidth/oldDisplayHeight need.
+		dispatchChange = dispatchChange || pendingDispatchChange;
+		fromRotation = fromRotation || pendingFromRotation;
+		pendingResize = false;
+		pendingDispatchChange = false;
+		pendingFromRotation = false;
+
 		resizing = true;
 		try {
 			const oldDisplayWidth = canvasWindow.imageWidth;
@@ -687,6 +713,15 @@
 		// Layout-only: do not dispatch change. Emitting toJSON() here would write
 		// already-display coordinates back into value and trigger parseInputBoxes again.
 		resize(false);
+	});
+
+	// Covers the case where the canvas becomes visible without a measurable box
+	// change, which the ResizeObserver would not report.
+	const visibilityObserver = new IntersectionObserver((entries) => {
+		if (destroyed || !canvas || !pendingResize) return;
+		if (entries.some((entry) => entry.isIntersecting)) {
+			resize(false);
+		}
 	});
 
 	/** Convert value.boxes (plain data from Gradio) into Box instances stored in _boxStore.
@@ -840,6 +875,7 @@
 		if (!canvas) return;
 		ctx = canvas.getContext("2d");
 		observer.observe(canvas);
+		visibilityObserver.observe(canvas);
 
 		// _boxStore is populated by the $: block's RAF. At mount time it will be empty,
 		// so the RAF will handle initial selection once parseInputBoxes() runs.
@@ -855,6 +891,7 @@
 		destroyed = true;
 		cancelPendingRafs();
 		observer.disconnect();
+		visibilityObserver.disconnect();
 		if (image) {
 			image.onload = null;
 			image = null;
