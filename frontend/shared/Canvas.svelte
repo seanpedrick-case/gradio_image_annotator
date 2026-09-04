@@ -112,10 +112,19 @@
 	// Gradio app's reactive cascade and cause effect_update_depth_exceeded.
 	const _internal = { orientation: (value !== null ? value.orientation : 0) ?? 0 };
 
+	// Set once parseInputBoxes() has run, i.e. once _boxStore reflects the incoming
+	// value rather than the empty state it mounts in.
+	let valueParsed = false;
+
 	/** Dispatch change event in next macrotask, passing current box + orientation data as
 	 *  detail so Index.svelte can return it from get_data() WITHOUT writing to $state.
 	 *  This completely avoids triggering the main app's reactive cascade. */
 	function dispatchChangeDeferred() {
+		// Before the first parseInputBoxes() the store is empty and says nothing about
+		// user intent. Index.svelte holds whatever we report in _pendingUpdate and
+		// splices it into value.boxes on the next get_data(), so dispatching here would
+		// erase every box the server sent and empty the store on the next $: run.
+		if (!valueParsed) return;
 		const boxes = _boxStore.items.map(b => b.toJSON());
 		const orientation = _internal.orientation;
 		setTimeout(() => {
@@ -733,6 +742,7 @@
 	 *  Never writes Box instances back to value.boxes — keeping Box instances out of
 	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
+        valueParsed = true;
         if (value === null || !Array.isArray(value.boxes)) {
             _boxStore.items = [];
             return;
@@ -889,7 +899,9 @@
 			selectBox(0);
 		}
 		setImage();
-		resize();
+		// Layout-only, like the observers: mount is not a user edit, and dispatching
+		// here would report the still-empty box store as the component's value.
+		resize(false);
 		draw();
 	});
 
