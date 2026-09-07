@@ -16,6 +16,15 @@
     export let choicesColors: string[] = [];
     export let showRemove = true;
     export let labelDetailLock = false;
+    // Viewport coordinates to open at, or null to centre near the top as before.
+    export let anchorX: number | null = null;
+    export let anchorY: number | null = null;
+
+    // Inline styles beat the stylesheet, so the default rules stay as the fallback.
+    $: anchorStyle =
+        anchorX !== null && anchorY !== null
+            ? `left: ${anchorX}px; top: ${anchorY}px; margin-top: 0;`
+            : "";
 
     // Unique ID so label/color element IDs don't clash across the three ModalBox instances.
     const uid = Math.random().toString(36).slice(2, 8);
@@ -102,7 +111,7 @@
 </script>
 
 <div class="modal" style:display={visible ? '' : 'none'}>
-    <div class="modal-container">
+    <div class="modal-container" style={anchorStyle}>
         <span class="modal-content">
             {#if !showRemove}
                 <div class="lock-wrap">

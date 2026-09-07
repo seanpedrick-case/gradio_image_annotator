@@ -177,11 +177,65 @@
 
 	let modalChoices: [string, number][] = [];
 	let modalChoicesColors: string[] = [];
+
+	// Where to open the label dialog, in viewport coordinates.
+	//
+	// The dialog is position: fixed. When the page is embedded in an iframe that is
+	// resized to its full content height — as on Hugging Face Spaces, via
+	// iframe-resizer — the iframe has no scrolling viewport of its own and the parent
+	// page does the scrolling. "Fixed to the top of the viewport" then means the top of
+	// the entire document, far above whatever the user is looking at. Anchoring to the
+	// box being edited is correct in both cases, since the user just clicked it.
+	let modalAnchorX: number | null = null;
+	let modalAnchorY: number | null = null;
+
+	function anchorModalToSelection() {
+		modalAnchorX = null;
+		modalAnchorY = null;
+		if (!canvas) return;
+
+		const rect = canvas.getBoundingClientRect();
+		// The bitmap and CSS sizes normally match, but scale anyway so the anchor
+		// survives any styling that stretches the canvas.
+		const scaleX = canvas.width > 0 ? rect.width / canvas.width : 1;
+		const scaleY = canvas.height > 0 ? rect.height / canvas.height : 1;
+
+		const box =
+			selectedBox >= 0 && selectedBox < _boxStore.items.length
+				? _boxStore.items[selectedBox]
+				: null;
+
+		if (box === null) {
+			modalAnchorX = rect.left + rect.width / 2;
+			modalAnchorY = rect.top + 16;
+			return;
+		}
+
+		box.updateOffset();
+		const [centreX, bottomY] = box.toCanvasCoordinates(
+			box.xmin + box.getWidth() / 2,
+			box.ymax
+		);
+		const x = rect.left + centreX * scaleX;
+		const y = rect.top + bottomY * scaleY;
+
+		// Open below the box, or above it when there is no room underneath.
+		const estimatedHeight = 110;
+		const fitsBelow = y + 12 + estimatedHeight <= window.innerHeight;
+		modalAnchorX = Math.min(Math.max(x, 8), Math.max(window.innerWidth - 8, 8));
+		modalAnchorY = fitsBelow
+			? y + 12
+			: Math.max(rect.top + 8, y - box.getHeight() * scaleY - estimatedHeight - 12);
+	}
 	
     function draw() {
 		// Painting while a resize is pending would show one frame of unscaled boxes.
 		// resize() clears the flag and calls draw() itself once it succeeds.
 		if (destroyed || !ctx || !canvas || pendingResize) return;
+		// At mount the store is empty until the $: block's RAF parses the value, so
+		// painting now would flash the document without its boxes. One frame later
+		// the same paint includes them.
+		if (!valueParsed && value !== null && Array.isArray(value.boxes) && value.boxes.length > 0) return;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
 		ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
@@ -218,12 +272,16 @@
 		}
 	}
 
-	function selectBox(index: number) {
+	function setSelection(index: number) {
 		selectedBox = index;
 		_boxStore.items.forEach((box) => box.setSelected(false));
 		if (index >= 0 && index < _boxStore.items.length) {
 			_boxStore.items[index].setSelected(true);
 		}
+	}
+
+	function selectBox(index: number) {
+		setSelection(index);
 		draw();
 	}
 
@@ -499,6 +557,7 @@
 						modalChoicesColors = m.colors;
 						newModalCurrentLabel = _boxStore.items[selectedBox].label;
 						newModalCurrentColor = colorRGBAToHex(_boxStore.items[selectedBox].color);
+						anchorModalToSelection();
 						newModalVisible = true;
 					}
 				}
@@ -517,6 +576,7 @@
 			modalChoicesColors = m.colors;
 			editModalCurrentLabel = _boxStore.items[selectedBox].label;
 			editModalCurrentColor = colorRGBAToHex(_boxStore.items[selectedBox].color);
+			anchorModalToSelection();
 			editModalVisible = true;
 		}
 	}
@@ -627,6 +687,7 @@
 	}
 
 	let resizing = false;
+	let lastResizedClientWidth = -1;
 	let pendingResize = false;
 	let pendingDispatchChange = false;
 	let pendingFromRotation = false;
@@ -659,6 +720,7 @@
 			const oldDisplayHeight = canvasWindow.imageHeight;
 
 			scaleFactor = 1;
+			lastResizedClientWidth = canvas.clientWidth;
 			canvas.width = canvas.clientWidth;
 
 			canvasWindow.setRotatedImage(image);
@@ -724,6 +786,9 @@
 	}
 	const observer = new ResizeObserver(() => {
 		if (destroyed || !canvas) return;
+		// resize() assigns canvas.width/height, which the observer reports straight back
+		// as a resize. Re-running for a width already handled only costs a repaint.
+		if (!pendingResize && canvas.clientWidth === lastResizedClientWidth) return;
 		// Layout-only: do not dispatch change. Emitting toJSON() here would write
 		// already-display coordinates back into value and trigger parseInputBoxes again.
 		resize(false);
@@ -850,10 +915,13 @@
 					canvasWindow.orientation = _internal.orientation;
 					setImage();
 					parseInputBoxes();
-					if (selectedBox < 0 && _boxStore.items.length > 0) {
-						selectBox(0);
-					}
+					// resize() before any paint: parseInputBoxes() leaves the boxes in
+					// natural image pixels, so drawing first flashes them at full size.
+					// Select without drawing for the same reason; the draw() below covers it.
 					resize(false);
+					if (selectedBox < 0 && _boxStore.items.length > 0) {
+						setSelection(0);
+					}
 					draw();
 			});
 		}
@@ -960,7 +1028,7 @@
 					class="icon"
 					aria-label="Edit label"
 					title="Edit label"
-					on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
+					on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; anchorModalToSelection(); editDefaultLabelVisible = true; }}><Label/></button
 				>
 			{/if}
 			<button
@@ -1019,7 +1087,7 @@
 				class="icon"
 				aria-label="Edit label"
 				title="Edit label"
-		on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; editDefaultLabelVisible = true; }}><Label/></button
+		on:click={() => { const m = getMergedChoices(); modalChoices = m.choices; modalChoicesColors = m.colors; defaultModalCurrentLabel = defaultLabelCache.label; defaultModalCurrentColor = defaultLabelCache.color; anchorModalToSelection(); editDefaultLabelVisible = true; }}><Label/></button
 		>
 	{/if}
 	<button
@@ -1050,6 +1118,8 @@
 	on:enter{onModalEditChange}
 	choices={modalChoices}
 	choicesColors={modalChoicesColors}
+	anchorX={modalAnchorX}
+	anchorY={modalAnchorY}
 />
 
 <ModalBox
@@ -1062,6 +1132,8 @@
 	showRemove={false}
 	choicesColors={modalChoicesColors}
 	labelDetailLock={labelDetailLock}
+	anchorX={modalAnchorX}
+	anchorY={modalAnchorY}
 />
 
 <ModalBox
@@ -1074,6 +1146,8 @@
 	showRemove={false}
 	choicesColors={modalChoicesColors}
 	labelDetailLock={labelDetailLock}
+	anchorX={modalAnchorX}
+	anchorY={modalAnchorY}
 />
 
 <style>
