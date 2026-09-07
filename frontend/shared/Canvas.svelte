@@ -232,10 +232,6 @@
 		// Painting while a resize is pending would show one frame of unscaled boxes.
 		// resize() clears the flag and calls draw() itself once it succeeds.
 		if (destroyed || !ctx || !canvas || pendingResize) return;
-		// At mount the store is empty until the $: block's RAF parses the value, so
-		// painting now would flash the document without its boxes. One frame later
-		// the same paint includes them.
-		if (!valueParsed && value !== null && Array.isArray(value.boxes) && value.boxes.length > 0) return;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
 		ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
