@@ -67,12 +67,29 @@
 	// effect_update_depth_exceeded when blocks.load() + nested layout components are present.
 	let _pendingUpdate: { boxes?: any[]; orientation?: number } | null = null;
 
+	// While Gradio is applying a server value, ignore change echoes. Otherwise:
+	// set_data → canvas paints → change → get_data → client set_data → remount/repaint loop.
+	let _suppressChangeEcho = false;
+	let _suppressChangeEchoTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function armChangeEchoSuppression(ms = 400) {
+		_suppressChangeEcho = true;
+		if (_suppressChangeEchoTimer !== null) {
+			clearTimeout(_suppressChangeEchoTimer);
+		}
+		_suppressChangeEchoTimer = setTimeout(() => {
+			_suppressChangeEcho = false;
+			_suppressChangeEchoTimer = null;
+		}, ms);
+	}
+
 	class ImageAnnotatorGradio extends Gradio<ImageAnnotatorEvents, ImageAnnotatorProps> {
 		// When Gradio sends new value data from Python, clear any pending user changes
 		// so get_data() returns the Gradio-provided data rather than stale user edits.
 		override set_data(data: Record<string, unknown>) {
 			if ('value' in data) {
 				_pendingUpdate = null;
+				armChangeEchoSuppression();
 			}
 			super.set_data(data);
 		}
@@ -136,11 +153,15 @@
 		bind:active_source
 		value={gradio.props.value}
 		on:change={(e) => {
+			if (_suppressChangeEcho) return;
 			// Store box+orientation data from Canvas in a plain variable (NOT $state).
 			// This is what get_data() will use, avoiding any $state writes that would
 			// cascade through the main Gradio app's reactive system.
 			_pendingUpdate = e.detail ?? null;
-			setTimeout(() => gradio.dispatch("change"), 0);
+			setTimeout(() => {
+				if (_suppressChangeEcho) return;
+				gradio.dispatch("change");
+			}, 0);
 		}}
 		selectable={gradio.props._selectable}
 		root={gradio.shared.root}

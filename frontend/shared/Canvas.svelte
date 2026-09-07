@@ -900,29 +900,51 @@
 
 	// Plain object container so property mutations are invisible to Svelte 5's
 	// reactive proxy tracking, preventing the $: block from scheduling a self-re-run.
-	const _lastProcessed = { value: null as typeof value };
+	const _lastProcessed = { value: null as typeof value, signature: "" };
+
+	function valueSignature(v: typeof value): string {
+		if (v === null) return "";
+		const image: any = v.image;
+		const url = (image && (image.url || image.path || image)) || "";
+		const boxes = Array.isArray(v.boxes) ? v.boxes : [];
+		// Content identity, not object identity — Gradio often re-wraps the same
+		// FileData/boxes in a new object, which used to re-trigger parse+resize.
+		const head = boxes[0];
+		const tail = boxes.length > 1 ? boxes[boxes.length - 1] : head;
+		const boxPart = head
+			? `${boxes.length}:${head.xmin},${head.ymin},${head.xmax},${head.ymax}` +
+				(tail ? `:${tail.xmin},${tail.ymin},${tail.xmax},${tail.ymax}` : "")
+			: "0";
+		return `${url}|${v.orientation ?? 0}|${boxPart}`;
+	}
+
 	$: {
 		const currentValue = value;
 		// A parent can briefly set value to null while applying FileData. Parsing
 		// that would empty the store and look like the page vanished; skip it.
-		// Explicit clear unmounts this component instead.
-		if (currentValue !== null && currentValue !== _lastProcessed.value) {
-			_lastProcessed.value = currentValue;
-			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
-			_internal.orientation = (currentValue.orientation) ?? 0;
-			scheduleAfterPaint(() => {
-					canvasWindow.orientation = _internal.orientation;
-					setImage();
-					parseInputBoxes();
-					// resize() before any paint: parseInputBoxes() leaves the boxes in
-					// natural image pixels, so drawing first flashes them at full size.
-					// Select without drawing for the same reason; the draw() below covers it.
-					resize(false);
-					if (selectedBox < 0 && _boxStore.items.length > 0) {
-						setSelection(0);
-					}
-					draw();
-			});
+		if (currentValue === null) {
+			// leave store as-is
+		} else {
+			const signature = valueSignature(currentValue);
+			if (signature !== _lastProcessed.signature) {
+				_lastProcessed.value = currentValue;
+				_lastProcessed.signature = signature;
+				// Sync orientation from Gradio-provided value (non-reactively, via plain property).
+				_internal.orientation = (currentValue.orientation) ?? 0;
+				scheduleAfterPaint(() => {
+						canvasWindow.orientation = _internal.orientation;
+						setImage();
+						parseInputBoxes();
+						// resize() before any paint: parseInputBoxes() leaves the boxes in
+						// natural image pixels, so drawing first flashes them at full size.
+						// Select without drawing for the same reason; the draw() below covers it.
+						resize(false);
+						if (selectedBox < 0 && _boxStore.items.length > 0) {
+							setSelection(0);
+						}
+						draw();
+				});
+			}
 		}
 	}
 

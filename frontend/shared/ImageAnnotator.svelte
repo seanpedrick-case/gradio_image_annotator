@@ -48,7 +48,7 @@
 
 	// Build fingerprint — survives minification so check_served_annotator / DevTools
 	// can confirm this revision is what the browser actually loaded.
-	const ANNOTATOR_BUILD_ID = "retain-canvas-v2-20260907";
+	const ANNOTATOR_BUILD_ID = "retain-canvas-v3-20260907";
 	if (typeof window !== "undefined") {
 		(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID =
 			ANNOTATOR_BUILD_ID;
