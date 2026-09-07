@@ -46,6 +46,15 @@
 	let uploading = false;
 	export let active_source: source_type = null;
 
+	// Keep the last non-null payload so a brief null (Gradio FileData apply,
+	// Upload `uploading` flicker) does not unmount <canvas>. Recreating that
+	// element blanks the bitmap and reloads the page image — the whole-canvas
+	// flicker on Review-tab load. Explicit clear() drops this too.
+	let retainedValue: null | AnnotatedImageData = null;
+	$: if (value !== null) retainedValue = value;
+	$: showCanvas = value !== null || retainedValue !== null;
+	$: canvasSrc = (value ?? retainedValue)?.image?.url;
+
 	function handle_upload({ detail }: CustomEvent<FileData>): void {
 		value = new AnnotatedImageData();
 		value.image = detail;
@@ -64,8 +73,6 @@
 		await tick();
 		dispatch("change");
 	}
-
-	$: if (uploading) clear();
 
 	const dispatch = createEventDispatcher<{
 		change: any;
@@ -96,6 +103,7 @@
 	}
 
 	function clear() {
+		retainedValue = null;
 		value = null;
 		dispatch("clear");
 		dispatch("change");
@@ -168,7 +176,7 @@
 				{upload}
 			/>
 		{/if}
-		{#if value !== null}
+		{#if showCanvas}
 			<div class:selectable class="image-frame" >
 			<ImageCanvas
 				bind:value
@@ -187,7 +195,7 @@
 					{boxSelectedThickness}
 					{useDefaultLabel}
 					{enableKeyboardShortcuts}
-					src={value?.image?.url}
+					src={canvasSrc}
 				/>
 			</div>
 		{/if}

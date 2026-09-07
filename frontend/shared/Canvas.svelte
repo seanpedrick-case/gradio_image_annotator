@@ -903,10 +903,16 @@
 	const _lastProcessed = { value: null as typeof value };
 	$: {
 		const currentValue = value;
+		// A parent can briefly set value to null while applying FileData. Parsing
+		// that would empty the store and look like the page vanished; skip it.
+		// Explicit clear unmounts this component instead.
+		if (currentValue === null) {
+			return;
+		}
 		if (currentValue !== _lastProcessed.value) {
 			_lastProcessed.value = currentValue;
 			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
-			_internal.orientation = (currentValue !== null ? currentValue.orientation : 0) ?? 0;
+			_internal.orientation = (currentValue.orientation) ?? 0;
 			scheduleAfterPaint(() => {
 					canvasWindow.orientation = _internal.orientation;
 					setImage();
