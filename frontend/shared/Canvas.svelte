@@ -906,10 +906,7 @@
 		// A parent can briefly set value to null while applying FileData. Parsing
 		// that would empty the store and look like the page vanished; skip it.
 		// Explicit clear unmounts this component instead.
-		if (currentValue === null) {
-			return;
-		}
-		if (currentValue !== _lastProcessed.value) {
+		if (currentValue !== null && currentValue !== _lastProcessed.value) {
 			_lastProcessed.value = currentValue;
 			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
 			_internal.orientation = (currentValue.orientation) ?? 0;
