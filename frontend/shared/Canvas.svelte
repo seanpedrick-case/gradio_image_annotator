@@ -1007,11 +1007,6 @@
 	}
 
 	onMount(() => {
-		if (typeof window !== "undefined") {
-			const w = window as unknown as { __ANNOTATOR_CANVAS_MOUNTS?: number };
-			w.__ANNOTATOR_CANVAS_MOUNTS = (w.__ANNOTATOR_CANVAS_MOUNTS || 0) + 1;
-			console.info("[annotator] Canvas mount #" + w.__ANNOTATOR_CANVAS_MOUNTS);
-		}
 		if (Array.isArray(choices) && choices.length > 0) {
 			if (!Array.isArray(choicesColors) || choicesColors.length == 0) {
 				for (let i = 0; i < choices.length; i++) {

@@ -5,14 +5,10 @@
 	// (module scripts here cannot reliably import local .ts helpers during cc build).
 	const ANNOTATOR_BUILD_ID = "retain-across-remount-v5-20260907";
 
-	// Set on JS load (not on ImageAnnotator mount) so DevTools can read it
-	// before the Review tab is opened.
+	// Quiet build fingerprint for DevTools (window.__ANNOTATOR_BUILD_ID).
 	if (typeof window !== "undefined") {
-		(window as unknown as {
-			__ANNOTATOR_BUILD_ID?: string;
-			__ANNOTATOR_INDEX_MOUNTS?: number;
-			__ANNOTATOR_CANVAS_MOUNTS?: number;
-		}).__ANNOTATOR_BUILD_ID = ANNOTATOR_BUILD_ID;
+		(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID =
+			ANNOTATOR_BUILD_ID;
 	}
 </script>
 
@@ -167,19 +163,6 @@
 	// Gradio remounts this Index often; keep echo suppression armed across instances
 	// so mount-time change events cannot feed another remount cycle.
 	armChangeEchoSuppression(750);
-
-	if (typeof window !== "undefined") {
-		const w = window as unknown as {
-			__ANNOTATOR_INDEX_MOUNTS?: number;
-			__ANNOTATOR_BUILD_ID?: string;
-		};
-		w.__ANNOTATOR_INDEX_MOUNTS = (w.__ANNOTATOR_INDEX_MOUNTS || 0) + 1;
-		console.info(
-			"[annotator] Index mount #" + w.__ANNOTATOR_INDEX_MOUNTS,
-			"build=",
-			w.__ANNOTATOR_BUILD_ID
-		);
-	}
 
 	$effect(() => {
 		// Automatically set the default source once props are available
