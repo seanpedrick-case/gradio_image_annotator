@@ -11,6 +11,11 @@
 	import { Clear } from "@gradio/icons";
 	import ImageCanvas from "./ImageCanvas.svelte";
 	import AnnotatedImageData from "./AnnotatedImageData";
+	import {
+		clearRetainedValue,
+		coalesceValue,
+		rememberValue
+	} from "./retainState";
 
 	type source_type = "upload" | "webcam" | "clipboard" | null;
 
@@ -46,13 +51,10 @@
 	let uploading = false;
 	export let active_source: source_type = null;
 
-	// Build fingerprint lives in Index.svelte module script (set on JS load).
-	// Keep the last usable payload so a brief null / image-less value does not
-	// clear the image URL we hand to the canvas. Explicit clear() drops this.
-	let retainedValue: null | AnnotatedImageData = null;
-	$: if (value !== null && value.image) retainedValue = value;
+	// Module-scope retain survives Gradio remounting Index; instance lets do not.
+	$: displayValue = (coalesceValue(value) as AnnotatedImageData | null) ?? value;
 	$: canvasSrc = (() => {
-		const image: any = (value ?? retainedValue)?.image;
+		const image: any = displayValue?.image;
 		if (!image) return undefined;
 		return image.url || image.path || undefined;
 	})();
@@ -106,7 +108,7 @@
 	}
 
 	function clear() {
-		retainedValue = null;
+		clearRetainedValue();
 		value = null;
 		dispatch("clear");
 		dispatch("change");
@@ -186,8 +188,19 @@
 		     Keep the node stable; Canvas.svelte ignores transient null values. -->
 		<div class:selectable class="image-frame" class:empty={!canvasSrc}>
 			<ImageCanvas
-				value={value ?? retainedValue}
-				on:change={(e) => dispatch("change", e.detail)}
+				value={displayValue}
+				on:change={(e) => {
+					if (e.detail && displayValue?.image) {
+						rememberValue({
+							image: displayValue.image,
+							boxes: e.detail.boxes ?? [],
+							orientation: e.detail.orientation ?? 0,
+							image_width: displayValue.image_width,
+							image_height: displayValue.image_height
+						});
+					}
+					dispatch("change", e.detail);
+				}}
 					{boxesAlpha}
 					{labelList}
 					{labelColors}

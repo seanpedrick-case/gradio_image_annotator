@@ -7,6 +7,14 @@
 	import AnnotatedImageData from "./AnnotatedImageData";
 	import { Undo, Redo } from "@gradio/icons";
 	import WindowViewer from "./WindowViewer";
+	import {
+		blitCanvasSnapshot,
+		captureCanvasSnapshot,
+		getRetainedValue,
+		imageKeyFromValue,
+		isChangeEchoSuppressed,
+		rememberValue
+	} from "./retainState";
 
 	enum Mode {creation, drag}
 
@@ -125,10 +133,13 @@
 		// splices it into value.boxes on the next get_data(), so dispatching here would
 		// erase every box the server sent and empty the store on the next $: run.
 		if (!valueParsed) return;
+		// Gradio remounts Index often; module-scope suppress blocks mount echoes that
+		// would feed another remount via get_data → prop update.
+		if (isChangeEchoSuppressed()) return;
 		const boxes = _boxStore.items.map(b => b.toJSON());
 		const orientation = _internal.orientation;
 		setTimeout(() => {
-			if (destroyed) return;
+			if (destroyed || isChangeEchoSuppressed()) return;
 			dispatch("change", { boxes, orientation });
 		}, 0);
 	}
@@ -804,15 +815,36 @@
 	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
         valueParsed = true;
-        if (value === null || !Array.isArray(value.boxes)) {
+        let sourceValue = value;
+        if (sourceValue === null || !Array.isArray(sourceValue.boxes)) {
             _boxStore.items = [];
             return;
         }
 
+		// Remount glitch: Gradio may re-push the same image with boxes=[] while
+		// change-echo is suppressed. Prefer module retain for that image.
+		if (
+			sourceValue.boxes.length === 0 &&
+			isChangeEchoSuppressed()
+		) {
+			const retained = getRetainedValue();
+			if (
+				retained &&
+				retained.boxes.length > 0 &&
+				imageKeyFromValue(retained) === imageKeyFromValue(sourceValue)
+			) {
+				sourceValue = {
+					...sourceValue,
+					boxes: retained.boxes,
+					orientation: sourceValue.orientation ?? retained.orientation
+				} as AnnotatedImageData;
+			}
+		}
+
         const newBoxes: Box[] = [];
 
-        for (let i = 0; i < value.boxes.length; i++) {
-            const boxData = value.boxes[i];
+        for (let i = 0; i < sourceValue.boxes.length; i++) {
+            const boxData = sourceValue.boxes[i];
 
             if (boxData && typeof boxData === 'object') {
                 let color = "";
@@ -896,6 +928,15 @@
         }
 
         _boxStore.items = newBoxes;
+		if (sourceValue?.image && newBoxes.length > 0) {
+			rememberValue({
+				image: sourceValue.image,
+				boxes: newBoxes.map((b) => b.toJSON()),
+				orientation: _internal.orientation,
+				image_width: sourceValue.image_width,
+				image_height: sourceValue.image_height
+			});
+		}
     }
 
 	// Plain object container so property mutations are invisible to Svelte 5's
@@ -984,6 +1025,12 @@
 
 		if (!canvas) return;
 		ctx = canvas.getContext("2d");
+		// Paint last frame immediately so Gradio remounts do not flash a blank canvas.
+		const key = imageUrl || imageKeyFromValue(value);
+		if (key) {
+			blitCanvasSnapshot(canvas, key);
+			ctx = canvas.getContext("2d");
+		}
 		observer.observe(canvas);
 		visibilityObserver.observe(canvas);
 
@@ -1004,6 +1051,21 @@
 		cancelPendingRafs();
 		observer.disconnect();
 		visibilityObserver.disconnect();
+		if (canvas && canvas.width > 0 && canvas.height > 0) {
+			const key = imageUrl || imageKeyFromValue(value);
+			if (key) {
+				captureCanvasSnapshot(canvas, key);
+			}
+			if (value?.image && _boxStore.items.length > 0) {
+				rememberValue({
+					image: value.image,
+					boxes: _boxStore.items.map((b) => b.toJSON()),
+					orientation: _internal.orientation,
+					image_width: value.image_width,
+					image_height: value.image_height
+				});
+			}
+		}
 		if (image) {
 			image.onload = null;
 			image = null;

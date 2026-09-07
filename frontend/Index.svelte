@@ -1,9 +1,12 @@
 <script module lang="ts">
 	export { default as BaseExample } from "./Example.svelte";
 
+	// Keep in sync with ANNOTATOR_BUILD_ID in shared/retainState.ts
+	// (module scripts here cannot reliably import local .ts helpers during cc build).
+	const ANNOTATOR_BUILD_ID = "retain-across-remount-v5-20260907";
+
 	// Set on JS load (not on ImageAnnotator mount) so DevTools can read it
 	// before the Review tab is opened.
-	const ANNOTATOR_BUILD_ID = "retain-canvas-v4-20260907";
 	if (typeof window !== "undefined") {
 		(window as unknown as {
 			__ANNOTATOR_BUILD_ID?: string;
@@ -21,6 +24,16 @@
 	import type { LoadingStatus } from "@gradio/statustracker";
 	import AnnotatedImageData from "./shared/AnnotatedImageData";
 	import ImageAnnotator from "./shared/ImageAnnotator.svelte";
+	import {
+		armChangeEchoSuppression,
+		clearPendingUpdate,
+		coalesceValue,
+		getPendingUpdate,
+		getRetainedValue,
+		imageKeyFromValue,
+		isChangeEchoSuppressed,
+		setPendingUpdate
+	} from "./shared/retainState";
 
 	type SelectData = any;
 	type ShareData = any;
@@ -72,76 +85,99 @@
 		enable_keyboard_shortcuts: boolean;
 	};
 
-	// Plain (non-reactive) variable holding the latest box+orientation data from Canvas.
-	// Canvas dispatches "change" with this data instead of writing to value.boxes ($state),
-	// which would trigger the main Gradio app's reactive cascade and cause
-	// effect_update_depth_exceeded when blocks.load() + nested layout components are present.
-	let _pendingUpdate: { boxes?: any[]; orientation?: number } | null = null;
-
-	// While Gradio is applying a server value, ignore change echoes. Otherwise:
-	// set_data → canvas paints → change → get_data → client set_data → remount/repaint loop.
-	let _suppressChangeEcho = false;
-	let _suppressChangeEchoTimer: ReturnType<typeof setTimeout> | null = null;
-
-	function armChangeEchoSuppression(ms = 400) {
-		_suppressChangeEcho = true;
-		if (_suppressChangeEchoTimer !== null) {
-			clearTimeout(_suppressChangeEchoTimer);
-		}
-		_suppressChangeEchoTimer = setTimeout(() => {
-			_suppressChangeEcho = false;
-			_suppressChangeEchoTimer = null;
-		}, ms);
-	}
-
 	class ImageAnnotatorGradio extends Gradio<ImageAnnotatorEvents, ImageAnnotatorProps> {
 		// When Gradio sends new value data from Python, clear any pending user changes
-		// so get_data() returns the Gradio-provided data rather than stale user edits.
+		// so get_data() returns the Gradio-provided data rather than stale user edits —
+		// unless the payload looks like a remount empty-box glitch (handled in coalesce).
 		override set_data(data: Record<string, unknown>) {
-			if ('value' in data) {
-				_pendingUpdate = null;
+			if ("value" in data) {
+				clearPendingUpdate();
 				armChangeEchoSuppression();
+				const next = data.value as AnnotatedImageData | null;
+				const coalesced = coalesceValue(next);
+				if (coalesced && next && Array.isArray(next.boxes) && next.boxes.length === 0) {
+					const retained = getRetainedValue();
+					if (
+						retained &&
+						retained.boxes.length > 0 &&
+						imageKeyFromValue(retained) === imageKeyFromValue(next)
+					) {
+						// Keep server image identity but do not let empty boxes wipe retain.
+						data = {
+							...data,
+							value: {
+								...next,
+								boxes: retained.boxes.map((b) => ({ ...b })),
+								orientation: next.orientation ?? retained.orientation
+							}
+						};
+					}
+				} else if (coalesced && (next == null || !next.image)) {
+					data = { ...data, value: coalesced as AnnotatedImageData };
+				}
 			}
 			super.set_data(data);
 		}
 
 		async get_data() {
 			const snapshot = await super.get_data();
+			const pending = getPendingUpdate();
 			// Apply the latest box/orientation data from Canvas without ever having written
 			// to the $state proxy (which is what caused the reactive cascade).
-			if (_pendingUpdate !== null && snapshot.value !== null) {
-				if (_pendingUpdate.boxes !== undefined) {
-					snapshot.value.boxes = _pendingUpdate.boxes;
+			if (pending !== null && snapshot.value !== null) {
+				if (pending.boxes !== undefined) {
+					snapshot.value.boxes = pending.boxes;
 				}
-				if (_pendingUpdate.orientation !== undefined) {
-					snapshot.value.orientation = _pendingUpdate.orientation;
+				if (pending.orientation !== undefined) {
+					snapshot.value.orientation = pending.orientation;
+				}
+			} else if (snapshot.value !== null) {
+				const retained = getRetainedValue();
+				const boxes = Array.isArray(snapshot.value.boxes) ? snapshot.value.boxes : [];
+				if (
+					boxes.length === 0 &&
+					retained &&
+					retained.boxes.length > 0 &&
+					imageKeyFromValue(retained) === imageKeyFromValue(snapshot.value)
+				) {
+					// Remount storm: get_data often runs before parse; do not report [].
+					snapshot.value.boxes = retained.boxes.map((b) => ({ ...b }));
+					snapshot.value.orientation =
+						snapshot.value.orientation ?? retained.orientation;
 				}
 			}
 			return snapshot;
 		}
 	}
 
-	const props = $props<ImageAnnotatorProps & {
-		autoscroll?: boolean;
-		i18n?: any;
-		max_file_size?: number;
-		client?: any;
-	}>();
+	const props = $props<
+		ImageAnnotatorProps & {
+			autoscroll?: boolean;
+			i18n?: any;
+			max_file_size?: number;
+			client?: any;
+		}
+	>();
 
 	const gradio = new ImageAnnotatorGradio(props);
 
 	let dragging = $state(false);
 	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(null);
 
-	// Count Index (custom-component root) mounts. If this rises with every flicker,
-	// Gradio is remounting the whole component host — not just the <canvas>.
+	// Gradio remounts this Index often; keep echo suppression armed across instances
+	// so mount-time change events cannot feed another remount cycle.
+	armChangeEchoSuppression(750);
+
 	if (typeof window !== "undefined") {
-		const w = window as unknown as { __ANNOTATOR_INDEX_MOUNTS?: number };
+		const w = window as unknown as {
+			__ANNOTATOR_INDEX_MOUNTS?: number;
+			__ANNOTATOR_BUILD_ID?: string;
+		};
 		w.__ANNOTATOR_INDEX_MOUNTS = (w.__ANNOTATOR_INDEX_MOUNTS || 0) + 1;
 		console.info(
 			"[annotator] Index mount #" + w.__ANNOTATOR_INDEX_MOUNTS,
 			"build=",
-			(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID
+			w.__ANNOTATOR_BUILD_ID
 		);
 	}
 
@@ -176,13 +212,11 @@
 		bind:active_source
 		value={gradio.props.value}
 		on:change={(e) => {
-			if (_suppressChangeEcho) return;
-			// Store box+orientation data from Canvas in a plain variable (NOT $state).
-			// This is what get_data() will use, avoiding any $state writes that would
-			// cascade through the main Gradio app's reactive system.
-			_pendingUpdate = e.detail ?? null;
+			if (isChangeEchoSuppressed()) return;
+			// Store box+orientation data from Canvas in module scope (NOT $state).
+			setPendingUpdate(e.detail ?? null);
 			setTimeout(() => {
-				if (_suppressChangeEcho) return;
+				if (isChangeEchoSuppressed()) return;
 				gradio.dispatch("change");
 			}, 0);
 		}}
@@ -200,7 +234,10 @@
 			if (typeof raw === "string" && raw.length > 0) {
 				try {
 					const parsed = JSON.parse(raw);
-					if (Array.isArray(parsed)) return parsed.map((x: unknown) => (typeof x === "string" ? x : String(x)));
+					if (Array.isArray(parsed))
+						return parsed.map((x: unknown) =>
+							typeof x === "string" ? x : String(x)
+						);
 				} catch (_) {}
 			}
 			return Array.isArray(gradio.props.label_list) ? gradio.props.label_list : [];
