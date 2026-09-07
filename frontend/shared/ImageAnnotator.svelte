@@ -46,19 +46,16 @@
 	let uploading = false;
 	export let active_source: source_type = null;
 
-	// Build fingerprint — survives minification so check_served_annotator / DevTools
-	// can confirm this revision is what the browser actually loaded.
-	const ANNOTATOR_BUILD_ID = "retain-canvas-v3-20260907";
-	if (typeof window !== "undefined") {
-		(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID =
-			ANNOTATOR_BUILD_ID;
-	}
-
-	// Keep the last non-null payload so a brief null (Gradio FileData apply)
-	// does not clear the image URL we hand to the canvas. Explicit clear() drops this.
+	// Build fingerprint lives in Index.svelte module script (set on JS load).
+	// Keep the last usable payload so a brief null / image-less value does not
+	// clear the image URL we hand to the canvas. Explicit clear() drops this.
 	let retainedValue: null | AnnotatedImageData = null;
-	$: if (value !== null) retainedValue = value;
-	$: canvasSrc = (value ?? retainedValue)?.image?.url;
+	$: if (value !== null && value.image) retainedValue = value;
+	$: canvasSrc = (() => {
+		const image: any = (value ?? retainedValue)?.image;
+		if (!image) return undefined;
+		return image.url || image.path || undefined;
+	})();
 	// This app uses sources=None; skip the Upload/Webcam chrome entirely so it
 	// cannot unhide or remount siblings while Gradio applies a new FileData image.
 	$: hasImageSources = Array.isArray(sources) && sources.length > 0;
@@ -91,8 +88,6 @@
 	}>();
 
 	let dragging = false;
-
-	$: dispatch("drag", dragging);
 
 	$: if (!active_source && hasImageSources) {
 		active_source = sources[0];

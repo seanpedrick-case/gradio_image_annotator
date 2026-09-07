@@ -1,5 +1,16 @@
 <script module lang="ts">
 	export { default as BaseExample } from "./Example.svelte";
+
+	// Set on JS load (not on ImageAnnotator mount) so DevTools can read it
+	// before the Review tab is opened.
+	const ANNOTATOR_BUILD_ID = "retain-canvas-v4-20260907";
+	if (typeof window !== "undefined") {
+		(window as unknown as {
+			__ANNOTATOR_BUILD_ID?: string;
+			__ANNOTATOR_INDEX_MOUNTS?: number;
+			__ANNOTATOR_CANVAS_MOUNTS?: number;
+		}).__ANNOTATOR_BUILD_ID = ANNOTATOR_BUILD_ID;
+	}
 </script>
 
 <script lang="ts">
@@ -121,6 +132,18 @@
 
 	let dragging = $state(false);
 	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(null);
+
+	// Count Index (custom-component root) mounts. If this rises with every flicker,
+	// Gradio is remounting the whole component host — not just the <canvas>.
+	if (typeof window !== "undefined") {
+		const w = window as unknown as { __ANNOTATOR_INDEX_MOUNTS?: number };
+		w.__ANNOTATOR_INDEX_MOUNTS = (w.__ANNOTATOR_INDEX_MOUNTS || 0) + 1;
+		console.info(
+			"[annotator] Index mount #" + w.__ANNOTATOR_INDEX_MOUNTS,
+			"build=",
+			(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID
+		);
+	}
 
 	$effect(() => {
 		// Automatically set the default source once props are available
