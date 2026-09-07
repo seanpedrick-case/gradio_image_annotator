@@ -134,7 +134,7 @@
 
 	<ImageAnnotator
 		bind:active_source
-		bind:value={gradio.props.value}
+		value={gradio.props.value}
 		on:change={(e) => {
 			// Store box+orientation data from Canvas in a plain variable (NOT $state).
 			// This is what get_data() will use, avoiding any $state writes that would

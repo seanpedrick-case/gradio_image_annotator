@@ -56,7 +56,7 @@
 </script>
 
 <Canvas
-	bind:value
+	{value}
 	on:change={(e) => dispatch("change", e.detail)}
 	{interactive}
 	boxAlpha={boxesAlpha}

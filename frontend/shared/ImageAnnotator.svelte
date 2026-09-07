@@ -46,14 +46,22 @@
 	let uploading = false;
 	export let active_source: source_type = null;
 
-	// Keep the last non-null payload so a brief null (Gradio FileData apply,
-	// Upload `uploading` flicker) does not unmount <canvas>. Recreating that
-	// element blanks the bitmap and reloads the page image — the whole-canvas
-	// flicker on Review-tab load. Explicit clear() drops this too.
+	// Build fingerprint — survives minification so check_served_annotator / DevTools
+	// can confirm this revision is what the browser actually loaded.
+	const ANNOTATOR_BUILD_ID = "retain-canvas-v2-20260907";
+	if (typeof window !== "undefined") {
+		(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID =
+			ANNOTATOR_BUILD_ID;
+	}
+
+	// Keep the last non-null payload so a brief null (Gradio FileData apply)
+	// does not clear the image URL we hand to the canvas. Explicit clear() drops this.
 	let retainedValue: null | AnnotatedImageData = null;
 	$: if (value !== null) retainedValue = value;
-	$: showCanvas = value !== null || retainedValue !== null;
 	$: canvasSrc = (value ?? retainedValue)?.image?.url;
+	// This app uses sources=None; skip the Upload/Webcam chrome entirely so it
+	// cannot unhide or remount siblings while Gradio applies a new FileData image.
+	$: hasImageSources = Array.isArray(sources) && sources.length > 0;
 
 	function handle_upload({ detail }: CustomEvent<FileData>): void {
 		value = new AnnotatedImageData();
@@ -86,7 +94,7 @@
 
 	$: dispatch("drag", dragging);
 
-	$: if (!active_source && sources) {
+	$: if (!active_source && hasImageSources) {
 		active_source = sources[0];
 	}
 
@@ -144,42 +152,46 @@
 
 <div data-testid="image" class="image-container">
 	<div class="upload-container">
-		<Upload
-			hidden={value !== null || active_source === "webcam"}
-			bind:this={upload}
-			bind:uploading
-			bind:dragging
-			filetype={active_source === "clipboard" ? "clipboard" : "image/*"}
-			on:load={handle_upload}
-			on:error
-			{root}
-			{max_file_size}
-			disable_click={!sources.includes("upload")}
-			upload={cli_upload}
-			{stream_handler}
-		>
-			{#if value === null}
-				<slot />
-			{/if}
-		</Upload>
-		{#if value === null && active_source === "webcam"}
-			<Webcam
-				{root}
-				on:capture={(e) => handle_save(e.detail)}
-				on:stream={(e) => handle_save(e.detail)}
+		{#if hasImageSources}
+			<Upload
+				hidden={value !== null || active_source === "webcam"}
+				bind:this={upload}
+				bind:uploading
+				bind:dragging
+				filetype={active_source === "clipboard" ? "clipboard" : "image/*"}
+				on:load={handle_upload}
 				on:error
-				on:drag
-				on:upload={(e) => handle_save(e.detail)}
-				mode="image"
-				include_audio={false}
-				{i18n}
-				{upload}
-			/>
+				{root}
+				{max_file_size}
+				disable_click={!sources.includes("upload")}
+				upload={cli_upload}
+				{stream_handler}
+			>
+				{#if value === null}
+					<slot />
+				{/if}
+			</Upload>
+			{#if value === null && active_source === "webcam"}
+				<Webcam
+					{root}
+					on:capture={(e) => handle_save(e.detail)}
+					on:stream={(e) => handle_save(e.detail)}
+					on:error
+					on:drag
+					on:upload={(e) => handle_save(e.detail)}
+					mode="image"
+					include_audio={false}
+					{i18n}
+					{upload}
+				/>
+			{/if}
 		{/if}
-		{#if showCanvas}
-			<div class:selectable class="image-frame" >
+		<!-- Always mounted: a {#if} around the canvas recreated the element whenever
+		     Gradio briefly nulled value or replaced a parent node, blanking the bitmap.
+		     Keep the node stable; Canvas.svelte ignores transient null values. -->
+		<div class:selectable class="image-frame" class:empty={!canvasSrc}>
 			<ImageCanvas
-				bind:value
+				value={value ?? retainedValue}
 				on:change={(e) => dispatch("change", e.detail)}
 					{boxesAlpha}
 					{labelList}
@@ -197,10 +209,9 @@
 					{enableKeyboardShortcuts}
 					src={canvasSrc}
 				/>
-			</div>
-		{/if}
+		</div>
 	</div>
-	{#if (sources.length > 1 || sources.includes("clipboard")) && value === null && interactive}
+	{#if hasImageSources && (sources.length > 1 || sources.includes("clipboard")) && value === null && interactive}
 		<SelectSource
 			{sources}
 			bind:active_source
@@ -220,6 +231,12 @@
 	.image-frame {
 		object-fit: cover;
 		width: 100%;
+	}
+
+	.image-frame.empty {
+		visibility: hidden;
+		height: 0;
+		overflow: hidden;
 	}
 
 	.upload-container {
