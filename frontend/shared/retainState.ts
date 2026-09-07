@@ -5,7 +5,7 @@
  * good page payload and change-echo suppression here instead.
  */
 
-export const ANNOTATOR_BUILD_ID = "retain-across-remount-v5-20260907";
+export const ANNOTATOR_BUILD_ID = "retain-across-remount-v6-20260907";
 
 export type BoxPayload = { boxes: any[]; orientation: number };
 
@@ -97,8 +97,8 @@ export function clearRetainedValue(): void {
 /**
  * Prefer a stable page payload across Gradio remounts:
  * - null / image-less → last retained (if any)
- * - same image, empty boxes, while change-echo suppressed → keep retained boxes
- * - otherwise accept incoming and remember it
+ * - image present → always trust the incoming box list (including empty), so
+ *   intentional clears (e.g. "Exclude all") are not undone by retain
  */
 export function coalesceValue(incoming: {
 	image?: any;
@@ -111,26 +111,7 @@ export function coalesceValue(incoming: {
 		return retained;
 	}
 
-	const incomingKey = imageKeyFromValue(incoming);
 	const boxes = Array.isArray(incoming.boxes) ? incoming.boxes : [];
-	const retainedKey = retained ? imageKeyFromValue(retained) : "";
-
-	if (
-		boxes.length === 0 &&
-		suppressChangeEcho &&
-		retained &&
-		retainedKey === incomingKey &&
-		retained.boxes.length > 0
-	) {
-		return {
-			image: incoming.image,
-			boxes: cloneBoxes(retained.boxes),
-			orientation: incoming.orientation ?? retained.orientation ?? 0,
-			image_width: incoming.image_width ?? retained.image_width,
-			image_height: incoming.image_height ?? retained.image_height
-		};
-	}
-
 	rememberValue(incoming);
 	return {
 		image: incoming.image,

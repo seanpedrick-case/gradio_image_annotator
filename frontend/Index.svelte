@@ -3,7 +3,7 @@
 
 	// Keep in sync with ANNOTATOR_BUILD_ID in shared/retainState.ts
 	// (module scripts here cannot reliably import local .ts helpers during cc build).
-	const ANNOTATOR_BUILD_ID = "retain-across-remount-v5-20260907";
+	const ANNOTATOR_BUILD_ID = "retain-across-remount-v6-20260907";
 
 	// Quiet build fingerprint for DevTools (window.__ANNOTATOR_BUILD_ID).
 	if (typeof window !== "undefined") {
@@ -23,11 +23,11 @@
 	import {
 		armChangeEchoSuppression,
 		clearPendingUpdate,
-		coalesceValue,
 		getPendingUpdate,
 		getRetainedValue,
 		imageKeyFromValue,
 		isChangeEchoSuppressed,
+		rememberValue,
 		setPendingUpdate
 	} from "./shared/retainState";
 
@@ -90,26 +90,15 @@
 				clearPendingUpdate();
 				armChangeEchoSuppression();
 				const next = data.value as AnnotatedImageData | null;
-				const coalesced = coalesceValue(next);
-				if (coalesced && next && Array.isArray(next.boxes) && next.boxes.length === 0) {
+				// Only fill a missing image from retain. Never reinstate boxes when
+				// the server sends [] — that blocked "Exclude all" on the current page.
+				if (next == null || !next.image) {
 					const retained = getRetainedValue();
-					if (
-						retained &&
-						retained.boxes.length > 0 &&
-						imageKeyFromValue(retained) === imageKeyFromValue(next)
-					) {
-						// Keep server image identity but do not let empty boxes wipe retain.
-						data = {
-							...data,
-							value: {
-								...next,
-								boxes: retained.boxes.map((b) => ({ ...b })),
-								orientation: next.orientation ?? retained.orientation
-							}
-						};
+					if (retained) {
+						data = { ...data, value: retained as AnnotatedImageData };
 					}
-				} else if (coalesced && (next == null || !next.image)) {
-					data = { ...data, value: coalesced as AnnotatedImageData };
+				} else {
+					rememberValue(next);
 				}
 			}
 			super.set_data(data);
@@ -127,16 +116,24 @@
 				if (pending.orientation !== undefined) {
 					snapshot.value.orientation = pending.orientation;
 				}
-			} else if (snapshot.value !== null) {
+			} else if (
+				snapshot.value !== null &&
+				isChangeEchoSuppressed()
+			) {
+				// Remount before parse: props may already be correct; only fill from
+				// retain if props boxes are empty *and* retain still has the same
+				// image's last remembered boxes (rememberValue updates on set_data,
+				// so an intentional exclude leaves retain empty/updated).
 				const retained = getRetainedValue();
-				const boxes = Array.isArray(snapshot.value.boxes) ? snapshot.value.boxes : [];
+				const boxes = Array.isArray(snapshot.value.boxes)
+					? snapshot.value.boxes
+					: [];
 				if (
 					boxes.length === 0 &&
 					retained &&
 					retained.boxes.length > 0 &&
 					imageKeyFromValue(retained) === imageKeyFromValue(snapshot.value)
 				) {
-					// Remount storm: get_data often runs before parse; do not report [].
 					snapshot.value.boxes = retained.boxes.map((b) => ({ ...b }));
 					snapshot.value.orientation =
 						snapshot.value.orientation ?? retained.orientation;

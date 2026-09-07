@@ -10,7 +10,6 @@
 	import {
 		blitCanvasSnapshot,
 		captureCanvasSnapshot,
-		getRetainedValue,
 		imageKeyFromValue,
 		isChangeEchoSuppressed,
 		rememberValue
@@ -820,26 +819,6 @@
             _boxStore.items = [];
             return;
         }
-
-		// Remount glitch: Gradio may re-push the same image with boxes=[] while
-		// change-echo is suppressed. Prefer module retain for that image.
-		if (
-			sourceValue.boxes.length === 0 &&
-			isChangeEchoSuppressed()
-		) {
-			const retained = getRetainedValue();
-			if (
-				retained &&
-				retained.boxes.length > 0 &&
-				imageKeyFromValue(retained) === imageKeyFromValue(sourceValue)
-			) {
-				sourceValue = {
-					...sourceValue,
-					boxes: retained.boxes,
-					orientation: sourceValue.orientation ?? retained.orientation
-				} as AnnotatedImageData;
-			}
-		}
 
         const newBoxes: Box[] = [];
 
