@@ -7,6 +7,13 @@
 	import AnnotatedImageData from "./AnnotatedImageData";
 	import { Undo, Redo } from "@gradio/icons";
 	import WindowViewer from "./WindowViewer";
+	import {
+		blitCanvasSnapshot,
+		captureCanvasSnapshot,
+		imageKeyFromValue,
+		isChangeEchoSuppressed,
+		rememberValue
+	} from "./retainState";
 
 	enum Mode {creation, drag}
 
@@ -125,10 +132,13 @@
 		// splices it into value.boxes on the next get_data(), so dispatching here would
 		// erase every box the server sent and empty the store on the next $: run.
 		if (!valueParsed) return;
+		// Gradio remounts Index often; module-scope suppress blocks mount echoes that
+		// would feed another remount via get_data → prop update.
+		if (isChangeEchoSuppressed()) return;
 		const boxes = _boxStore.items.map(b => b.toJSON());
 		const orientation = _internal.orientation;
 		setTimeout(() => {
-			if (destroyed) return;
+			if (destroyed || isChangeEchoSuppressed()) return;
 			dispatch("change", { boxes, orientation });
 		}, 0);
 	}
@@ -232,10 +242,6 @@
 		// Painting while a resize is pending would show one frame of unscaled boxes.
 		// resize() clears the flag and calls draw() itself once it succeeds.
 		if (destroyed || !ctx || !canvas || pendingResize) return;
-		// At mount the store is empty until the $: block's RAF parses the value, so
-		// painting now would flash the document without its boxes. One frame later
-		// the same paint includes them.
-		if (!valueParsed && value !== null && Array.isArray(value.boxes) && value.boxes.length > 0) return;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
 		ctx.translate(canvasWindow.offsetX, canvasWindow.offsetY);
@@ -808,15 +814,16 @@
 	 *  the $state proxy is what prevents effect_update_depth_exceeded. */
 	function parseInputBoxes() {
         valueParsed = true;
-        if (value === null || !Array.isArray(value.boxes)) {
+        let sourceValue = value;
+        if (sourceValue === null || !Array.isArray(sourceValue.boxes)) {
             _boxStore.items = [];
             return;
         }
 
         const newBoxes: Box[] = [];
 
-        for (let i = 0; i < value.boxes.length; i++) {
-            const boxData = value.boxes[i];
+        for (let i = 0; i < sourceValue.boxes.length; i++) {
+            const boxData = sourceValue.boxes[i];
 
             if (boxData && typeof boxData === 'object') {
                 let color = "";
@@ -900,30 +907,64 @@
         }
 
         _boxStore.items = newBoxes;
+		if (sourceValue?.image && newBoxes.length > 0) {
+			rememberValue({
+				image: sourceValue.image,
+				boxes: newBoxes.map((b) => b.toJSON()),
+				orientation: _internal.orientation,
+				image_width: sourceValue.image_width,
+				image_height: sourceValue.image_height
+			});
+		}
     }
 
 	// Plain object container so property mutations are invisible to Svelte 5's
 	// reactive proxy tracking, preventing the $: block from scheduling a self-re-run.
-	const _lastProcessed = { value: null as typeof value };
+	const _lastProcessed = { value: null as typeof value, signature: "" };
+
+	function valueSignature(v: typeof value): string {
+		if (v === null) return "";
+		const image: any = v.image;
+		const url = (image && (image.url || image.path || image)) || "";
+		const boxes = Array.isArray(v.boxes) ? v.boxes : [];
+		// Content identity, not object identity — Gradio often re-wraps the same
+		// FileData/boxes in a new object, which used to re-trigger parse+resize.
+		const head = boxes[0];
+		const tail = boxes.length > 1 ? boxes[boxes.length - 1] : head;
+		const boxPart = head
+			? `${boxes.length}:${head.xmin},${head.ymin},${head.xmax},${head.ymax}` +
+				(tail ? `:${tail.xmin},${tail.ymin},${tail.xmax},${tail.ymax}` : "")
+			: "0";
+		return `${url}|${v.orientation ?? 0}|${boxPart}`;
+	}
+
 	$: {
 		const currentValue = value;
-		if (currentValue !== _lastProcessed.value) {
-			_lastProcessed.value = currentValue;
-			// Sync orientation from Gradio-provided value (non-reactively, via plain property).
-			_internal.orientation = (currentValue !== null ? currentValue.orientation : 0) ?? 0;
-			scheduleAfterPaint(() => {
-					canvasWindow.orientation = _internal.orientation;
-					setImage();
-					parseInputBoxes();
-					// resize() before any paint: parseInputBoxes() leaves the boxes in
-					// natural image pixels, so drawing first flashes them at full size.
-					// Select without drawing for the same reason; the draw() below covers it.
-					resize(false);
-					if (selectedBox < 0 && _boxStore.items.length > 0) {
-						setSelection(0);
-					}
-					draw();
-			});
+		// A parent can briefly set value to null while applying FileData. Parsing
+		// that would empty the store and look like the page vanished; skip it.
+		if (currentValue === null) {
+			// leave store as-is
+		} else {
+			const signature = valueSignature(currentValue);
+			if (signature !== _lastProcessed.signature) {
+				_lastProcessed.value = currentValue;
+				_lastProcessed.signature = signature;
+				// Sync orientation from Gradio-provided value (non-reactively, via plain property).
+				_internal.orientation = (currentValue.orientation) ?? 0;
+				scheduleAfterPaint(() => {
+						canvasWindow.orientation = _internal.orientation;
+						setImage();
+						parseInputBoxes();
+						// resize() before any paint: parseInputBoxes() leaves the boxes in
+						// natural image pixels, so drawing first flashes them at full size.
+						// Select without drawing for the same reason; the draw() below covers it.
+						resize(false);
+						if (selectedBox < 0 && _boxStore.items.length > 0) {
+							setSelection(0);
+						}
+						draw();
+				});
+			}
 		}
 	}
 
@@ -958,6 +999,12 @@
 
 		if (!canvas) return;
 		ctx = canvas.getContext("2d");
+		// Paint last frame immediately so Gradio remounts do not flash a blank canvas.
+		const key = imageUrl || imageKeyFromValue(value);
+		if (key) {
+			blitCanvasSnapshot(canvas, key);
+			ctx = canvas.getContext("2d");
+		}
 		observer.observe(canvas);
 		visibilityObserver.observe(canvas);
 
@@ -978,6 +1025,21 @@
 		cancelPendingRafs();
 		observer.disconnect();
 		visibilityObserver.disconnect();
+		if (canvas && canvas.width > 0 && canvas.height > 0) {
+			const key = imageUrl || imageKeyFromValue(value);
+			if (key) {
+				captureCanvasSnapshot(canvas, key);
+			}
+			if (value?.image && _boxStore.items.length > 0) {
+				rememberValue({
+					image: value.image,
+					boxes: _boxStore.items.map((b) => b.toJSON()),
+					orientation: _internal.orientation,
+					image_width: value.image_width,
+					image_height: value.image_height
+				});
+			}
+		}
 		if (image) {
 			image.onload = null;
 			image = null;

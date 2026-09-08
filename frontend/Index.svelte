@@ -1,5 +1,15 @@
 <script module lang="ts">
 	export { default as BaseExample } from "./Example.svelte";
+
+	// Keep in sync with ANNOTATOR_BUILD_ID in shared/retainState.ts
+	// (module scripts here cannot reliably import local .ts helpers during cc build).
+	const ANNOTATOR_BUILD_ID = "retain-across-remount-v6-20260907";
+
+	// Quiet build fingerprint for DevTools (window.__ANNOTATOR_BUILD_ID).
+	if (typeof window !== "undefined") {
+		(window as unknown as { __ANNOTATOR_BUILD_ID?: string }).__ANNOTATOR_BUILD_ID =
+			ANNOTATOR_BUILD_ID;
+	}
 </script>
 
 <script lang="ts">
@@ -10,6 +20,16 @@
 	import type { LoadingStatus } from "@gradio/statustracker";
 	import AnnotatedImageData from "./shared/AnnotatedImageData";
 	import ImageAnnotator from "./shared/ImageAnnotator.svelte";
+	import {
+		armChangeEchoSuppression,
+		clearPendingUpdate,
+		getPendingUpdate,
+		getRetainedValue,
+		imageKeyFromValue,
+		isChangeEchoSuppressed,
+		rememberValue,
+		setPendingUpdate
+	} from "./shared/retainState";
 
 	type SelectData = any;
 	type ShareData = any;
@@ -61,49 +81,85 @@
 		enable_keyboard_shortcuts: boolean;
 	};
 
-	// Plain (non-reactive) variable holding the latest box+orientation data from Canvas.
-	// Canvas dispatches "change" with this data instead of writing to value.boxes ($state),
-	// which would trigger the main Gradio app's reactive cascade and cause
-	// effect_update_depth_exceeded when blocks.load() + nested layout components are present.
-	let _pendingUpdate: { boxes?: any[]; orientation?: number } | null = null;
-
 	class ImageAnnotatorGradio extends Gradio<ImageAnnotatorEvents, ImageAnnotatorProps> {
 		// When Gradio sends new value data from Python, clear any pending user changes
-		// so get_data() returns the Gradio-provided data rather than stale user edits.
+		// so get_data() returns the Gradio-provided data rather than stale user edits —
+		// unless the payload looks like a remount empty-box glitch (handled in coalesce).
 		override set_data(data: Record<string, unknown>) {
-			if ('value' in data) {
-				_pendingUpdate = null;
+			if ("value" in data) {
+				clearPendingUpdate();
+				armChangeEchoSuppression();
+				const next = data.value as AnnotatedImageData | null;
+				// Only fill a missing image from retain. Never reinstate boxes when
+				// the server sends [] — that blocked "Exclude all" on the current page.
+				if (next == null || !next.image) {
+					const retained = getRetainedValue();
+					if (retained) {
+						data = { ...data, value: retained as AnnotatedImageData };
+					}
+				} else {
+					rememberValue(next);
+				}
 			}
 			super.set_data(data);
 		}
 
 		async get_data() {
 			const snapshot = await super.get_data();
+			const pending = getPendingUpdate();
 			// Apply the latest box/orientation data from Canvas without ever having written
 			// to the $state proxy (which is what caused the reactive cascade).
-			if (_pendingUpdate !== null && snapshot.value !== null) {
-				if (_pendingUpdate.boxes !== undefined) {
-					snapshot.value.boxes = _pendingUpdate.boxes;
+			if (pending !== null && snapshot.value !== null) {
+				if (pending.boxes !== undefined) {
+					snapshot.value.boxes = pending.boxes;
 				}
-				if (_pendingUpdate.orientation !== undefined) {
-					snapshot.value.orientation = _pendingUpdate.orientation;
+				if (pending.orientation !== undefined) {
+					snapshot.value.orientation = pending.orientation;
+				}
+			} else if (
+				snapshot.value !== null &&
+				isChangeEchoSuppressed()
+			) {
+				// Remount before parse: props may already be correct; only fill from
+				// retain if props boxes are empty *and* retain still has the same
+				// image's last remembered boxes (rememberValue updates on set_data,
+				// so an intentional exclude leaves retain empty/updated).
+				const retained = getRetainedValue();
+				const boxes = Array.isArray(snapshot.value.boxes)
+					? snapshot.value.boxes
+					: [];
+				if (
+					boxes.length === 0 &&
+					retained &&
+					retained.boxes.length > 0 &&
+					imageKeyFromValue(retained) === imageKeyFromValue(snapshot.value)
+				) {
+					snapshot.value.boxes = retained.boxes.map((b) => ({ ...b }));
+					snapshot.value.orientation =
+						snapshot.value.orientation ?? retained.orientation;
 				}
 			}
 			return snapshot;
 		}
 	}
 
-	const props = $props<ImageAnnotatorProps & {
-		autoscroll?: boolean;
-		i18n?: any;
-		max_file_size?: number;
-		client?: any;
-	}>();
+	const props = $props<
+		ImageAnnotatorProps & {
+			autoscroll?: boolean;
+			i18n?: any;
+			max_file_size?: number;
+			client?: any;
+		}
+	>();
 
 	const gradio = new ImageAnnotatorGradio(props);
 
 	let dragging = $state(false);
 	let active_source = $state<"upload" | "webcam" | "clipboard" | null>(null);
+
+	// Gradio remounts this Index often; keep echo suppression armed across instances
+	// so mount-time change events cannot feed another remount cycle.
+	armChangeEchoSuppression(750);
 
 	$effect(() => {
 		// Automatically set the default source once props are available
@@ -134,13 +190,15 @@
 
 	<ImageAnnotator
 		bind:active_source
-		bind:value={gradio.props.value}
+		value={gradio.props.value}
 		on:change={(e) => {
-			// Store box+orientation data from Canvas in a plain variable (NOT $state).
-			// This is what get_data() will use, avoiding any $state writes that would
-			// cascade through the main Gradio app's reactive system.
-			_pendingUpdate = e.detail ?? null;
-			setTimeout(() => gradio.dispatch("change"), 0);
+			if (isChangeEchoSuppressed()) return;
+			// Store box+orientation data from Canvas in module scope (NOT $state).
+			setPendingUpdate(e.detail ?? null);
+			setTimeout(() => {
+				if (isChangeEchoSuppressed()) return;
+				gradio.dispatch("change");
+			}, 0);
 		}}
 		selectable={gradio.props._selectable}
 		root={gradio.shared.root}
@@ -156,7 +214,10 @@
 			if (typeof raw === "string" && raw.length > 0) {
 				try {
 					const parsed = JSON.parse(raw);
-					if (Array.isArray(parsed)) return parsed.map((x: unknown) => (typeof x === "string" ? x : String(x)));
+					if (Array.isArray(parsed))
+						return parsed.map((x: unknown) =>
+							typeof x === "string" ? x : String(x)
+						);
 				} catch (_) {}
 			}
 			return Array.isArray(gradio.props.label_list) ? gradio.props.label_list : [];
