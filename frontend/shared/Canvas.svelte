@@ -502,6 +502,7 @@
             boxAlpha,
 			newBoxId,
             newBoxText,
+            0, // page unset (0); server stamps the real page on save from page state
             boxMinSize,
             handleSize,
             boxThickness,
